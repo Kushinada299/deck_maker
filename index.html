@@ -1,0 +1,4841 @@
+<!DOCTYPE html>
+<html lang="jp">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/vuetify@3.5.13/dist/vuetify.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css"
+      rel="stylesheet"
+    />
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@3.5.13/dist/vuetify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+    <title>支配剣術デッキ編集</title>
+    <link rel="icon" href="https://lh3.googleusercontent.com/d/1orpZpvw6zIF0wanHq8kruR4mtfRmSxcm" />
+  </head>
+  <body>
+    <div id="app">
+      <v-app id="inspire">
+        <v-main>
+          <v-container fluid>
+            <v-row>
+              <v-col>
+                <img src="https://lh3.googleusercontent.com/d/1IXDiaVLjCJ8IkV0aGX1vrMF0siH7YZz-" width="300"  />
+              </v-col>
+              <v-col cols="auto" class="ms-auto">
+                <v-btn
+                  density="default"
+                  icon="mdi-cog"
+                  @click="show_option = !show_option"
+                ></v-btn>
+              </v-col>
+            </v-row>
+            <v-expand-transition>
+              <v-row v-show="show_option">
+                <v-col cols="auto" style="width: 60vh">
+                  <v-card class="mx-auto" variant="outlined">
+                    <v-card-title class="text-h6 font-weight-bold"
+                      >オプション</v-card-title
+                    >
+                    <v-row>
+                      <v-col>
+                        <p class="text-h6 pa-2">デッキ</p>
+                      </v-col>
+                    </v-row>
+                    <v-divider></v-divider>
+                    <v-row>
+                      <v-col cols="4">
+                        <p>カードサイズ</p>
+                      </v-col>
+                      <v-col>
+                        <v-slider
+                          v-model="options.deck_card_size"
+                          max="200"
+                          min="20"
+                          thumb-label
+                        ></v-slider>
+                      </v-col>
+                    </v-row>
+                    <v-divider></v-divider>
+                    <v-row>
+                      <v-col cols="4">
+                        <p>デッキゾーン高さ</p>
+                      </v-col>
+                      <v-col>
+                        <v-slider
+                          v-model="options.dropzone_max_height"
+                          max="100"
+                          min="20"
+                          thumb-label
+                        ></v-slider>
+                      </v-col>
+                    </v-row>
+                    <v-divider
+                      :thickness="3"
+                      class="border-opacity-75"
+                    ></v-divider>
+                    <v-row>
+                      <v-col>
+                        <p class="text-h6 pa-2">カード一覧</p>
+                      </v-col>
+                    </v-row>
+                    <v-divider></v-divider>
+                    <v-row>
+                      <v-col cols="4">
+                        <p>カードサイズ</p>
+                      </v-col>
+                      <v-col>
+                        <v-slider
+                          v-model="options.card_size"
+                          max="200"
+                          min="20"
+                          thumb-label
+                        ></v-slider>
+                      </v-col>
+                    </v-row>
+                  </v-card>
+                </v-col>
+              </v-row>
+            </v-expand-transition>
+            <!-- デッキメニュー　＋　オプションボタン -->
+            <v-row>
+            <v-col cols="auto ">
+                <v-select
+                  v-model="select_deck"
+                  :items="select_decks"
+                  item-title="name"
+                  item-value="index"
+                  style="height: 24px; width: 140px;"
+                  label="Select"
+                  @update:model-value="update_deck_code()"
+                  persistent-hint
+                  return-object
+                  single-line
+                  
+                ></v-select>
+            </v-col>
+              <v-col cols="4">
+                <v-text-field
+                  style="height: 48px; width: 140px;"
+                  label="名前"
+                  variant="outlined"
+                  v-model="this.decks[this.select_deck.index].name"
+                  @input="update_deck_name()"
+                   
+                ></v-text-field>
+              </v-row>
+             
+              <!-- インポート・エクスポートは消えました -->
+             
+              
+            <v-row>
+            </v-col>
+              　<v-col cols="auto" style="margin-left: -25px;">
+                <v-btn
+                  class="ma-2"
+                  color="blue"
+                  variant="tonal"
+                  @click="add_deck()"
+                    style="height: 48px; width: 90px;"
+                >
+                  新規デッキ
+                </v-btn>
+            </v-col>
+              　<v-col cols="auto" style="margin-left: -40px;">
+                <v-btn
+                  class="ma-2"
+                  color="light-green"
+                  variant="tonal"
+                  @click="copy_deck()"
+                 style="height: 48px; width: 90px;"
+                >
+                  デッキ複製
+                </v-btn>
+            </v-col>
+              <v-col cols="auto" style="margin-left: -25px;">
+                <v-btn
+                  class="ma-2"
+                  color="red"
+                  variant="tonal"
+                  @click="delete_deck()"
+                   style="height: 48px; width: 90px;"
+                >
+                  デッキ削除
+                </v-btn>
+                </v-col>
+            
+             
+              <v-col cols="auto" style="margin-left: -10px;">
+                <v-btn
+                  class="ma-2"
+                  color="green"
+                  variant="tonal"
+                  @click="save()"
+                   style="height: 48px; width: 190px;"
+                >
+                  ローカルデータに内容保存
+                </v-btn>
+              </v-col>
+              <!-- シミュレーションボタン -->
+              <v-col cols="auto" style="margin-left: -25px;">
+                <v-btn
+                  class="ma-2"
+                  variant="tonal"
+                  @click="open_dialog_simulation()"
+                   style="height: 48px; width: 100px;"
+                >
+                  初動検証開始
+                </v-btn>
+              </v-col>
+              <!-- デッキコード入力 -->
+              <v-col cols="auto" style="margin-left: -10px;">
+                <v-btn
+                  class="ma-2"
+                  variant="tonal"
+                  @click="show_input_deck_code = !show_input_deck_code"
+                   style="height: 48px; width: 210px;"
+                >
+                  デッキコードからデッキ作成
+                </v-btn>
+                </v-row>
+                 <v-expand-transition>
+              <v-row v-show="show_input_deck_code">
+                <v-col cols="12" class="px-0">
+                  <v-card class="mx-auto" variant="outlined">
+                    <v-card-title class="text-h6"
+                      >デッキコードからデッキ作成</v-card-title
+                    >
+                    <v-row>
+                      <v-col cols="12">
+                        <v-text-field
+                          variant="outlined"
+                          label="デッキコード"
+                          :error-messages="error_message.deck_code"
+                          v-model="input_deck_code"
+                        ></v-text-field>
+                      </v-col>
+                    </v-row>
+                    <v-row>
+                      <v-col cols="auto">
+                        <v-btn
+                          class="ma-2"
+                          variant="tonal"
+                          @click="decode_deck_code(false)"
+                        >
+                          このデッキに上書き
+                        </v-btn>
+                      </v-col>
+                      <v-col cols="auto">
+                        <v-btn
+                          class="ma-2"
+                          variant="tonal"
+                          @click="decode_deck_code(true)"
+                        >
+                          新規デッキとして保存
+                        </v-btn>
+                      </v-col>
+                    </v-row>
+                  </v-card>
+                </v-col>
+              </v-row>
+
+            
+            <!-- デッキコード入力 -->
+           
+            <!-- インポート・エクスポートは消えました -->
+             
+            </v-expand-transition>
+            <!-- デッキカード -->
+            <v-row align-content="center">
+              <v-col cols="auto">
+                <p class="text-h5"  style="height: 24px; width: 90px;">デッキ編成</p>
+              </v-col>
+              <v-col cols="auto">
+                <v-btn
+                  density="default"
+                  icon="mdi-information"
+                  @click="show_info = !show_info"
+                ></v-btn>
+              </v-col>
+              <v-col cols="auto">
+                <v-select
+                  v-model="deck_card_sort"
+                  :items="select_sort"
+                  label="並び順"
+                  return-object
+                ></v-select>
+              </v-col>
+              <v-col cols="auto">
+                <v-switch
+                  v-model="is_over_card"
+                  :label="is_over_card ? '同名重ね' : '同名表示'"
+                  @update:model-value="update_deck_code()"
+                  inset
+                ></v-switch>
+              </v-col>
+              <v-col cols="5" style="margin-left: -10px;">
+                <v-text-field
+                  style="height: 24px; width: 190px;"
+                  label="デッキコード(20枚編成で出現)"
+                  placeholder="編成20枚未満"
+                  persistent-placeholder
+                  variant="outlined"
+                  prepend-inner-icon="mdi-content-copy"
+                  :error-messages="error_message.deck"
+                  v-model="deck_code"
+                  readonly
+                  @click="copy_deck_code()"
+                ></v-text-field>
+                <v-snackbar location="top" v-model="show_snackbar_copy">
+                  コピーしました
+
+                  <template v-slot:actions>
+                    <v-btn
+                      color="pink"
+                      variant="text"
+                      @click="show_snackbar_copy = false"
+                    >
+                      閉じる
+                    </v-btn>
+                  </template>
+                </v-snackbar>
+              </v-col>
+              <v-col cols="auto">
+                <v-switch
+                  v-model="is_copy"
+                  :label="is_copy ? 'デッキコピー許可' : 'デッキコピー不可'"
+                  @update:model-value="update_deck_code()"
+                  inset
+                ></v-switch>
+              </v-col>
+            </v-row>
+            <!-- デッキ情報 -->
+            <v-expand-transition>
+              <v-row v-show="show_info">
+                <v-col cols="auto">
+                  <v-card class="mx-auto bg-grey-darken-3" variant="outlined">
+                    <v-card-title class="text-h6 text-center"
+                      >コスト</v-card-title
+                    >
+                    <v-divider></v-divider>
+                    <v-row align-content="center">
+                      <v-col class="px-3 py-3 font-weight-bold">0</v-col>
+                      <v-col class="px-3 py-3 font-weight-bold">1</v-col>
+                      <v-col class="px-3 py-3 font-weight-bold">2</v-col>
+                      <v-col class="px-3 py-3 font-weight-bold">3以上</v-col>
+                    </v-row>
+                    <v-divider></v-divider>
+                    <v-row>
+                      <v-col class="px-3 py-3"
+                        >{{ deck_cards.filter(e=>e.cost === 0).length
+                        }}枚</v-col
+                      >
+                      <v-col class="px-3 py-3"
+                        >{{ deck_cards.filter(e=>e.cost === 1).length
+                        }}枚</v-col
+                      >
+                      <v-col class="px-3 py-3"
+                        >{{ deck_cards.filter(e=>e.cost === 2).length
+                        }}枚</v-col
+                      >
+                      <v-col class="px-3 py-3"
+                        >{{ deck_cards.filter(e=>e.cost === 3).length
+                        }}枚</v-col
+                      >
+                    </v-row>
+                  </v-card>
+                </v-col>
+                <v-col cols="auto">
+                  <v-card class="mx-auto bg-grey-darken-3" variant="outlined">
+                    <v-card-title class="text-h6 text-center"
+                      >強度</v-card-title
+                    >
+                    <v-divider></v-divider>
+                    <v-row align-content="center">
+                      <v-col class="px-3 py-3 font-weight-bold" cols="auto"
+                        >呪文</v-col
+                      >
+                      <v-col class="px-3 py-3 font-weight-bold">滅</v-col>
+                      <v-col class="px-3 py-3 font-weight-bold">1</v-col>
+                      <v-col class="px-3 py-3 font-weight-bold">2</v-col>
+                      <v-col class="px-3 py-3 font-weight-bold">3</v-col>
+                      <v-col class="px-3 py-3 font-weight-bold">4</v-col>
+                    </v-row>
+                    <v-divider></v-divider>
+                    <v-row>
+                      <v-col class="px-3 py-3"
+                        >{{ deck_cards.filter(e=>e.strength === null).length
+                        }}枚</v-col
+                      >
+                      <v-col class="px-3 py-3"
+                        >{{ deck_cards.filter(e=>e.strength === 0).length
+                        }}枚</v-col
+                      >
+                      <v-col class="px-3 py-3"
+                        >{{ deck_cards.filter(e=>e.strength === 1).length
+                        }}枚</v-col
+                      >
+                      <v-col class="px-3 py-3"
+                        >{{ deck_cards.filter(e=>e.strength === 2).length
+                        }}枚</v-col
+                      >
+                      <v-col class="px-3 py-3"
+                        >{{ deck_cards.filter(e=>e.strength === 3).length
+                        }}枚</v-col
+                      >
+                      <v-col class="px-3 py-3"
+                        >{{ deck_cards.filter(e=>e.strength === 4).length
+                        }}枚</v-col
+                      >
+                    </v-row>
+                  </v-card>
+                </v-col>
+                <v-col cols="auto">
+                  <v-card class="mx-auto bg-grey-darken-3" variant="outlined">
+                    <v-card-title class="text-h6 text-center"
+                      >合計枚数</v-card-title
+                    >
+                    <v-divider></v-divider>
+
+                    <v-row>
+                      <v-col class="px-3 py-3 text-center">
+                        {{ deck_cards.length }} / 20
+                      </v-col>
+                    </v-row>
+                  </v-card>
+                </v-col>
+              </v-row>
+            </v-expand-transition>
+            <!-- デッキカード -->
+            <v-row
+              class="dropzone bg-green-darken-4 overflow-y-auto"
+              :style="{'max-height': options.dropzone_max_height + 'vh'}"
+            >
+              <v-col
+                v-for="deck_card in is_over_card ? deduplication_deck_cards : deck_cards"
+                cols="auto"
+                class="pt-5 pb-0 px-1"
+                style="position: relative"
+                @click.right.prevent="remove_card(deck_card.id)"
+              >
+                <img
+                  :src="`https://lh3.googleusercontent.com/d/${deck_card.id}`"
+                  class=""
+                  @click="open_card_detail(deck_card.id)"
+                  :width="options.deck_card_size"
+                />
+                <v-icon
+                  icon="mdi-close-circle-outline"
+                  class="icon-close cursor-pointer"
+                  @click="remove_card(deck_card.id)"
+                ></v-icon>
+                <v-icon
+                  v-show="is_over_card && num_deck_card(deck_card.id) === 2"
+                  icon="mdi-numeric-2-circle-outline"
+                  class="icon-numeric-2 cursor-pointer"
+                ></v-icon>
+              </v-col>
+              
+            </v-row>
+            
+
+            <!-- デッキカード一覧 -->
+            
+            
+            <!-- カード一覧メニューボタン -->
+            <v-row>
+              <v-col cols="auto">
+                <v-select
+                  v-model="card_sort"
+                  :items="select_sort"
+                  label="並び順"
+                  return-object
+                ></v-select>
+              </v-col>
+              <!-- フィルターボタン -->
+              <v-col cols="auto">
+                <v-btn
+                  class="ma-2"
+                  variant="tonal"
+                  :append-icon="is_filter ? 'mdi-lightbulb-on-outline':'mdi-lightbulb-off'"
+                  @click="show_filter = !show_filter"
+                >
+                  フィルター
+                </v-btn>
+              </v-col>
+            </v-row>
+            <!-- カード一覧メニュー -->
+            <v-row>
+              <v-col>
+                <!-- フィルター -->
+                <v-expand-transition>
+                    <v-row v-show="show_filter">
+                        <v-col cols="auto" class="px-0">
+                            <v-card class="mx-auto bg-grey-darken-4"
+                                    variant="outlined">
+                                <v-card-title class="text-h6">コスト</v-card-title>
+                                <v-row>
+                                    <v-col cols="auto">
+                                        <v-checkbox label="0"
+                                                    value="0"
+                                                    v-model="filters.costs"></v-checkbox>
+                                    </v-col>
+                                    <v-col cols="auto">
+                                        <v-checkbox label="1"
+                                                    value="1"
+                                                    v-model="filters.costs"></v-checkbox>
+                                    </v-col>
+                                    <v-col cols="auto">
+                                        <v-checkbox label="2"
+                                                    value="2"
+                                                    v-model="filters.costs"></v-checkbox>
+                                    </v-col>
+                                    <v-col cols="auto">
+                                        <v-checkbox label="3以上"
+                                                    value="3"
+                                                    v-model="filters.costs"></v-checkbox>
+                                    </v-col>
+                                </v-row>
+                            </v-card>
+                        </v-col>
+                        <v-col cols="auto" class="px-0">
+                            <v-card class="mx-auto bg-grey-darken-4"
+                                    variant="outlined">
+                                <v-card-title class="text-h6">レアリティ</v-card-title>
+                                <v-row>
+                                    <v-col cols="auto">
+                                        <v-checkbox label="1"
+                                                    value="1"
+                                                    v-model="filters.rarities"></v-checkbox>
+                                    </v-col>
+                                    <v-col cols="auto">
+                                        <v-checkbox label="2"
+                                                    value="2"
+                                                    v-model="filters.rarities"></v-checkbox>
+                                    </v-col>
+                                    <v-col cols="auto">
+                                        <v-checkbox label="3"
+                                                    value="3"
+                                                    v-model="filters.rarities"></v-checkbox>
+                                    </v-col>
+                                    
+                                </v-row>
+                            </v-card>
+                        </v-col>
+                        <v-col cols="auto" class="px-0">
+                            <v-card class="mx-auto bg-grey-darken-4"
+                                    variant="outlined">
+                                <v-card-title class="text-h6">強度</v-card-title>
+                                <v-row>
+                                    <v-col cols="auto">
+                                        <v-checkbox label="滅"
+                                                    value="5"
+                                                    v-model="filters.strengths"></v-checkbox>
+                                    </v-col>
+                                    <v-col cols="auto">
+                                        <v-checkbox label="1"
+                                                    value="1"
+                                                    v-model="filters.strengths"></v-checkbox>
+                                    </v-col>
+                                    <v-col cols="auto">
+                                        <v-checkbox label="2"
+                                                    value="2"
+                                                    v-model="filters.strengths"></v-checkbox>
+                                    </v-col>
+                                    <v-col cols="auto">
+                                        <v-checkbox label="3"
+                                                    value="3"
+                                                    v-model="filters.strengths"></v-checkbox>
+                                    </v-col>
+                                    <v-col cols="auto">
+                                        <v-checkbox label="4"
+                                                    value="4"
+                                                    v-model="filters.strengths"></v-checkbox>
+                                    </v-col>
+                                </v-row>
+                            </v-card>
+                        </v-col>
+                        <v-col cols="auto" class="px-0">
+                            <v-card class="mx-auto bg-grey-darken-4"
+                                    variant="outlined">
+                                <v-card-title class="text-h6">技・呪文</v-card-title>
+                                <v-row>
+                                    <v-col cols="auto">
+                                        <v-checkbox ref="art"
+                                                    label="技"
+                                                    value="1"
+                                                    v-model="filters.type"></v-checkbox>
+                                    </v-col>
+                                    <v-col cols="auto">
+                                        <v-checkbox label="呪文"
+                                                    value="2"
+                                                    v-model="filters.type"></v-checkbox>
+                                    </v-col>
+                                </v-row>
+                            </v-card>
+                        </v-col>
+                        <v-col cols="12" class="px-0">
+                            <v-card class="mx-auto bg-grey-darken-4" variant="outlined">
+
+                                <v-card-title class="text-h6 d-flex align-center"
+                                              style="cursor:pointer"
+                                              @click="showTagFilter = !showTagFilter">
+                                    <span>タグ検索</span>
+
+                                    <v-spacer></v-spacer>
+
+                                    <v-switch v-model="filters.tagMode"
+                                              true-value="and"
+                                              false-value="or"
+                                              :label="filters.tagMode === 'and' ? 'AND検索' : 'OR検索'"
+                                              hide-details
+                                              density="compact"
+                                              inset
+                                              @click.stop />
+                                </v-card-title>
+
+                                <v-expand-transition>
+                                    <div v-if="showTagFilter">
+
+                                        <v-chip-group v-model="filters.tags"
+                                                      multiple
+                                                      column
+                                                      class="pa-3">
+                                            <v-chip v-for="tag in tags"
+                                                    :key="tag.value"
+                                                    :value="tag.value"
+                                                    filter>
+                                                {{ tag.label }}
+                                            </v-chip>
+                                        </v-chip-group>
+
+                                    </div>
+                               <v-expand-transition>
+
+                            </v-card>
+                        </v-col>
+</v-col>
+                    <v-col cols="12" class="px-0 w-20">
+                      <v-card
+                        class="mx-auto bg-grey-darken-4"
+                        variant="outlined"
+                      >
+                        <v-card-title class="text-h6">検索</v-card-title>
+                        <v-row>
+                          <v-col>
+                            <v-text-field
+                              variant="outlined"
+                              v-model="filters.word"
+                            ></v-text-field>
+                          </v-col>
+                        </v-row>
+                      </v-card>
+                    </v-col>
+                  </v-row>
+                </v-expand-transition>
+              </v-col>
+            </v-row>
+            <!-- カード一覧 -->
+            <v-row>
+              <v-col cols="1" v-if="is_mobile"></v-col>
+              <v-col>
+                <v-row>
+                  <template v-for="card in sort_cards">
+                    <v-col cols="auto" class="pa-1" v-show="filter(card)" style="margin-right: -6px;">
+                      <div
+                        :class="{draggable:is_darg_card(card.id)}"
+                        :data-id="card.id"
+                        @click="open_card_detail(card.id)"
+                        @click.right.prevent="add_card(card.id)"
+                      >
+                        <img
+                         
+                          :src="`https://lh3.googleusercontent.com/d/${card.id}`"
+                          class="card-img"
+                          :class="{'bg-bark':!is_darg_card(card.id)}"
+                          :width="options.card_size"
+                        />
+                      </div>
+                    </v-col>
+                  </template>
+                </v-row>
+              </v-col>
+              <v-col cols="1" v-if="is_mobile"></v-col>
+            </v-row>
+
+            <!-- ダイアログ -->
+            <!-- 詳細ダイアログ -->
+            <v-dialog v-model="show_dialog_detail" width="auto">
+              <v-card>
+                <img class="card-detail" :src="`https://lh3.googleusercontent.com/d/${detail_card_id}`" />
+                <template v-slot:actions>
+                  <v-btn
+                    class="ms-auto"
+                    text="閉じる"
+                    @click="show_dialog_detail = false"
+                  ></v-btn>
+                </template>
+              </v-card>
+            </v-dialog>
+            <!-- シミュレーションダイアログ -->
+            <v-dialog v-model="show_dialog_simulation" width="100%">
+              <v-card>
+                <v-row
+                  class="bg-green-darken-4 ma-0"
+                  justify="center"
+                  style="width: 100%"
+                >
+                  <v-col
+                    v-for="i in num_simulation_card"
+                    cols="auto"
+                    class="pa-1"
+                  >
+                    <img
+                      :src="`https://lh3.googleusercontent.com/d/${random_simulation_cards[i-1].id}`"
+                      class=""
+                      @click="open_card_detail(random_simulation_cards[i-1].id)"
+                      :width="options.deck_card_size"
+                    />
+                  </v-col>
+                </v-row>
+                <template v-slot:actions>
+                  <v-btn
+                    class=""
+                    text="マリガン"
+                    @click="shuffle_card()"
+                  ></v-btn>
+                  <v-btn
+                    class=""
+                    text="ドロー"
+                    @click="num_simulation_card++"
+                    :disabled="num_simulation_card >= random_simulation_cards.length"
+                  ></v-btn>
+                  <v-btn
+                    class="ms-auto"
+                    text="閉じる"
+                    @click="show_dialog_simulation = false"
+                  ></v-btn>
+                </template>
+              </v-card>
+            </v-dialog>
+          </v-container>
+        </v-main>
+        <div></div>
+      </v-app>
+    </div>
+
+    <script>
+      const { createApp } = Vue;
+      const { createVuetify } = Vuetify;
+      const vuetify = createVuetify({
+        theme: {
+          defaultTheme: "dark",
+        },
+      });
+
+      createApp({
+        data() {
+          return {
+            show_info: false,
+            show_option: false,
+            show_filter: false,
+            showTagFilter: false,
+            show_dialog_detail: false,
+            show_dialog_simulation: false,
+            show_snackbar_copy: false,
+            show_input_deck_code: false,
+            show_import_export: false,
+            num_simulation_card: 4,
+            random_simulation_cards: [],
+            is_darg: false,
+            detail_card_id: "",
+            deck_code: "",
+            input_deck_code: "",
+            input_import_export: "",
+            is_copy: true,
+            is_over_card: false,
+            error_message: {
+              deck: "",
+              deck_code: "",
+              import_export: "",
+            },
+            options: {
+              deck_card_size: 96.4,
+              card_size: 169.7,
+              dropzone_max_height: 60,
+            },
+            select_deck: { name: "", index: null },
+            select_sort: [
+              { title: "デフォルト", value: "no" },
+              { title: "コスト", value: "cost" },
+              { title: "強度", value: "strength" },
+            ],
+            deck_card_sort: { title: "デフォルト", value: "no" },
+            card_sort: { title: "デフォルト", value: "no" },
+            filters: {
+              costs: [],
+              rarities: [],
+              strengths: [],
+              type: "",
+              tagMode: "or",
+              tags: [],
+              word: "",
+            },
+            tags: [
+              {
+                label: "カード引く",
+                value: 1,
+              },
+              {
+                label: "連鎖",
+                value: 2,
+              },
+              {
+                label: "構え",
+                value: 3,
+              },
+              {
+                label: "神技",
+                value: 4,
+              },
+              {
+                label: "氷撃",
+                value: 5,
+              },
+              {
+                label: "魔力",
+                value: 6,
+              },
+              {
+                label: "念動",
+                value: 7,
+              },
+              {
+                label: "共鳴",
+                value: 8,
+              },
+              {
+                label: "緑",
+                value: 9,
+              },
+              {
+                label: "いつでも使用可",
+                value: 10,
+              },
+              {
+                label: "強度上昇",
+                value: 11,
+              },
+              {
+                label: "強度下降",
+                value: 12,
+              },
+              {
+                label: "即時抜刀",
+                value: 13,
+              },
+              {
+                label: "雀の踊り",
+                value: 14,
+              },
+              {
+                label: "追加攻撃",
+                value: 15,
+              },
+              {
+                label: "効果で強度攻撃",
+                value: 16,
+              },
+              {
+                label: "効果で技を消耗",
+                value: 17,
+              },
+              {
+                label: "クリティカル",
+                value: 18,
+              },
+              {
+                label: "効果で体力を消費",
+                value: 19,
+              },
+              {
+                label: "消耗免れ",
+                value: 20,
+              },
+              {
+                label: "○○で消耗しない",
+                value: 21,
+              },
+              {
+                label: "抜刀禁止",
+                value: 22,
+              },
+              {
+                label: "手札を捨てる",
+                value: 23,
+              },
+              {
+                label: "効果を失う",
+                value: 24,
+              },
+              {
+                label: "効果複製",
+                value: 25,
+              },
+              {
+                label: "ゲージ獲得",
+                value: 26,
+              },
+              {
+                label: "体力回復",
+                value: 27,
+              },
+              {
+                label: "技を手札に戻す",
+                value: 28,
+              },
+              {
+                label: "使用済み回収",
+                value: 29,
+              },
+              {
+                label: "重ね系呪文",
+                value: 30,
+              },
+              {
+                label: "習得効果",
+                value: 31
+              },
+              {
+                label: "回転",
+                value: 32,
+              },
+              {
+                label: "残映ターン",
+                value: 33
+              },
+              {
+                label: "習得時(連鎖除く)",
+                value: 34,
+              },
+              {
+                label: "抜刀時",
+                value: 35,
+              },
+              {
+                label: "消耗時",
+                value: 36,
+              },
+              {
+                label: "ターン開始・終了時",
+                value: 37,
+              },
+            ],
+            decks: [],
+            cards: [
+                {
+                    id: "1VOXXmYTJUTUz4hJWmX4RrAH4nAAk0cTM",
+                    name: "百烈の斬り上げ",
+                    cost: 2,
+                    rarities: 2,
+                    strength: 4,
+                    effect: "",
+                    tags: [15, 35],
+                    no: 0,
+                },
+                {
+                    id: "1hojjWvOJ15U4VeVlidQFRmqyBr9UrQAt",
+                    name: "ヴァイキ",
+                    cost: 2,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [2, 18],
+                    no: 2,
+                },
+                {
+                    id: "19k5yAjqqemUY34LcD7UB5W9hsSJfI11E",
+                    name: "アルカセル",
+                    cost: 0,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [1, 2, 23],
+                    no: 4,
+                },
+                {
+                    id: "1tN0-0yuWci5rMGQguuehwnZA7NKE6CpY",
+                    name: "トゥアルカザ",
+                    cost: 0,
+                    rarities: 1,
+                    strength: null,
+                    effect: "",
+                    tags: [2, 11, 30],
+                    no: 6,
+                },
+                {
+                    id: "1S9ySXb2M3M8C8Ojp3IYYk_YfWWVQHDQt",
+                    name: "幻の構え",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 2,
+                    effect: "",
+                    tags: [1, 3, 34],
+                    no: 8,
+                },
+                {
+                    id: "1C6cp_RohdvtsGHbqqQKps5DCH7Wg0lH0",
+                    name: "なのか斬り",
+                    cost: 0,
+                    rarities: 2,
+                    strength: 1,
+                    effect: "",
+                    tags: [13, 22, 34],
+                    no: 10,
+                },
+                {
+                    id: "1niJn2luhfa8Yqst03HJq7jJBZiRGETyN",
+                    name: "つばめ返し",
+                    cost: 2,
+                    rarities: 1,
+                    strength: 3,
+                    effect: "",
+                    tags: [2, 15, 35],
+                    no: 12,
+                },
+                {
+                    id: "1TgBiy3CODSzfk0FKVuU2o2x4Baw5DCj_",
+                    name: "ソリフィアンスイング",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 3,
+                    effect: "",
+                    tags: [1, 35],
+                    no: 14,
+                },
+                {
+                    id: "1Lp1XSNhUoNGx-8iF__DgEaIHJxVkzxSn",
+                    name: "鬼仰反",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 5,
+                    effect: "",
+                    tags: [2],
+                    no: 16,
+                },
+                {
+                    id: "107FMoVhq4-S0DkGzyZ_lsi47CtEj3g_P",
+                    name: "塵晴らし",
+                    cost: 0,
+                    rarities: 2,
+                    strength: 2,
+                    effect: "",
+                    tags: [16, 34],
+                    no: 18,
+                },
+                {
+                    id: "14o_nwPM6dBy5jrh959pSNLSWsQx4Smhx",
+                    name: "刻",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 4,
+                    effect: "",
+                    tags: [12],
+                    no: 20,
+                },
+                {
+                    id: "1cME9LJ-oX74dDd35BIOkkGTF744LVFJK",
+                    name: "守衛一念の構え",
+                    cost: 2,
+                    rarities: 2,
+                    strength: 3,
+                    effect: "",
+                    tags: [3],
+                    no: 22,
+                },
+                {
+                    id: "1utws7Lpg-uTRlyOW0lS_5-iY-Peu9Oh6",
+                    name: "全滅の構え",
+                    cost: 3,
+                    rarities: 2,
+                    strength: 4,
+                    effect: "",
+                    tags: [3, 17, 19, 24, 34],
+                    no: 24,
+                },
+                {
+                    id: "14UHiEcoEvU-oH84drMi2OVEjgOZcfc4a",
+                    name: "アキロフ",
+                    cost: 1,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [2],
+                    no: 26,
+                },
+                {
+                    id: "1E7Om2qtmhhZUYj0219gJwMBeVlhnmhqJ",
+                    name: "エルラゾラ",
+                    cost: 0,
+                    rarities: 1,
+                    strength: null,
+                    effect: "",
+                    tags: [2.12],
+                    no: 28,
+                },
+                {
+                    id: "1jPV_thiGoLxphBJx_hguqzm32qU0SV1P",
+                    name: "ミュイエルション",
+                    cost: 0,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [1, 2],
+                    no: 30,
+                },
+                {
+                    id: "1Z9X5XuS1bNaSaKXyqXi-ewIpmZHViwGz",
+                    name: "乱雑切",
+                    cost: 1,
+                    rarities: 2,
+                    strength: 1,
+                    effect: "",
+                    tags: [2, 13],
+                    no: 32,
+                },
+                {
+                    id: "1Y7aSfK_WQkImNfamiSMedhOXAVeSU2Yt",
+                    name: "ライクエンド",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 5,
+                    effect: "",
+                    tags: [14, 18],
+                    no: 34,
+                },
+                {
+                    id: "17Q3FDUfwYnxIZy0r61CgQ3YCFA38DMH1",
+                    name: "ノの字斬り",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 3,
+                    effect: "",
+                    tags: [],
+                    no: 36,
+                },
+                {
+                    id: "1MUQ1xxCh5zCWO-ROyiuLmH2p7LsLY6dD",
+                    name: "初夏青春の輝刃",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 1,
+                    effect: "",
+                    tags: [14, 34],
+                    no: 38,
+                },
+                {
+                    id: "1Qy_fuZmaGu_dhAJcEKQWj55JJKzFAvtF",
+                    name: "局所損傷",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 2,
+                    effect: "",
+                    tags: [19],
+                    no: 40,
+                },
+                {
+                    id: "1dNEklQ5sxA81yrTCmllk-BiyRG-GE0u8",
+                    name: "魅せ剣",
+                    cost: 0,
+                    rarities: 2,
+                    strength: 1,
+                    effect: "",
+                    tags: [1, 2, 34],
+                    no: 42,
+                },
+                {
+                    id: "1Bpo2yy_aqE-ZWaWu4yz_060-DwpUA709",
+                    name: "暴虐強風",
+                    cost: 2,
+                    rarities: 2,
+                    strength: 5,
+                    effect: "",
+                    tags: [13, 14, 34],
+                    no: 44,
+                },
+                {
+                    id: "1yQ4mEQ-KOv_18WODTz6kuQkIH6T_Wo73",
+                    name: "イルミナドス",
+                    cost: 2,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [2, 19],
+                    no: 46,
+                },
+                {
+                    id: "1R-CYjRir4-aQSoC5P6Rqgax9HQllnlNl",
+                    name: "キュニンテ",
+                    cost: 0,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [1.10],
+                    no: 48,
+                },
+                {
+                    id: "1Ifuw3jxnAAXXCht_nkcRTMbUn4SAcIfK",
+                    name: "ユレムド",
+                    cost: 1,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [16],
+                    no: 50,
+                },
+                {
+                    id: "1JLhZXR54CjjeSCSnWXtP6JfLuVcpbgQL",
+                    name: "蝶の舞",
+                    cost: 1,
+                    rarities: 2,
+                    strength: 5,
+                    effect: "",
+                    tags: [14, 20, 34],
+                    no: 52,
+                },
+                {
+                    id: "1ToaxBL8cPOc2qXWNIrdx9EL24iDgGMUC",
+                    name: "神技のつつき",
+                    cost: 1,
+                    rarities: 2,
+                    strength: 1,
+                    effect: "",
+                    tags: [4],
+                    no: 54,
+                },
+                {
+                    id: "17F8vkTKYEWFVkvJqJoWSVLS-W6jBPo-t",
+                    name: "冷背の戦術",
+                    cost: 1,
+                    rarities: 2,
+                    strength: 2,
+                    effect: "",
+                    tags: [16, 34],
+                    no: 56,
+                },
+                {
+                    id: "1yXVLyr9jEbgJkwtHHOWkuujAhPlkIGSv",
+                    name: "エアスラッシュ",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 3,
+                    effect: "",
+                    tags: [2],
+                    no: 58,
+                },
+                {
+                    id: "1hP8bj0wTe_yaq23bWLg__LSCc8U9135c",
+                    name: "ラピッドカット",
+                    cost: 1,
+                    rarities: 2,
+                    strength: 4,
+                    effect: "",
+                    tags: [],
+                    no: 60,
+                },
+                {
+                    id: "1cfQBymO9OUWThKes_TyrttP0LLvd0aH6",
+                    name: "最適化閃",
+                    cost: 1,
+                    rarities: 2,
+                    strength: 2,
+                    effect: "",
+                    tags: [1, 2, 23, 34],
+                    no: 62,
+                },
+                {
+                    id: "1pnp9FCgmZcltMqFZ4yf0ZCaqSzeuXtJn",
+                    name: "ダッシュアタック",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 2,
+                    effect: "",
+                    tags: [2, 35],
+                    no: 64,
+                },
+                {
+                    id: "1hO4hOPITaPRxi4Hdy4wMfZHrY8c9rDoc",
+                    name: "ビューラクセム",
+                    cost: 2,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [2, 13],
+                    no: 66,
+                },
+                {
+                    id: "1UzPtvOneSv06cUnMXruwGc3Lw42TKuN3",
+                    name: "アッダンカム",
+                    cost: 2,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [9, 17],
+                    no: 68,
+                },
+                {
+                    id: "1Zf8wYowMwvFb1UX8EvlO1V2wbTEwAhmY",
+                    name: "ラウテセロ",
+                    cost: 0,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [2, 10],
+                    no: 70,
+                },
+                {
+                    id: "14NwWMPg52wvWS57jOaGIzTzb0QDn6qR5",
+                    name: "ウワトミウス",
+                    cost: 0,
+                    rarities: 1,
+                    strength: null,
+                    effect: "",
+                    tags: [2, 26],
+                    no: 72,
+                },
+                {
+                    id: "1uZaKOyTXc-8fx0hWpdfGpWLgdB3iCzr7",
+                    name: "イーラス",
+                    cost: 0,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [1, 26],
+                    no: 74,
+                },
+                {
+                    id: "1hmWZ-ze_ZE5Z4n6It5-K3rbsit9mUBQR",
+                    name: "剣神ごっこの動き",
+                    cost: 2,
+                    rarities: 1,
+                    strength: 3,
+                    effect: "",
+                    tags: [29, 34],
+                    no: 76,
+                },
+                {
+                    id: "18kFYisxibnb8_6Eiwwxm2VuGQXEdWhhp",
+                    name: "暗闇の魅惑剣",
+                    cost: 0,
+                    rarities: 3,
+                    strength: 1,
+                    effect: "",
+                    tags: [25, 34],
+                    no: 78,
+                },
+                {
+                    id: "10yId-Od115h20KxBv6x-ojl7ZjBu5guB",
+                    name: "ヒビ鏡斬撃",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 3,
+                    effect: "",
+                    tags: [29, 34],
+                    no: 80,
+                },
+                {
+                    id: "1D4-MJJnPBv66KE-jwRJuiPKq1mU_0e97",
+                    name: "ソーラーソード",
+                    cost: 1,
+                    rarities: 2,
+                    strength: 2,
+                    effect: "",
+                    tags: [1, 2],
+                    no: 82,
+                },
+                {
+                    id: "17q50w5TNc2Q-B0DWPuEIQqkKTzQtEqve",
+                    name: "捲り刺突",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 1,
+                    effect: "",
+                    tags: [2, 28, 34],
+                    no: 84,
+                },
+                {
+                    id: "1KKpslUL9nrtUIJUCkVUpFgJWklB8mFHk",
+                    name: "斬りキャン",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 5,
+                    effect: "",
+                    tags: [26, 35],
+                    no: 86,
+                },
+                {
+                    id: "1mY1iVKptt5oLrQteR6_ZY7U2h9XDTn5c",
+                    name: "居合斬り",
+                    cost: 2,
+                    rarities: 1,
+                    strength: 4,
+                    effect: "",
+                    tags: [],
+                    no: 88,
+                },
+                {
+                    id: "15vJyfnEv4ozxP2yTMlbD4vloosyZJ9vv",
+                    name: "プロの追い打ち",
+                    cost: 2,
+                    rarities: 3,
+                    strength: 5,
+                    effect: "",
+                    tags: [14, 15, 34],
+                    no: 90,
+                },
+                {
+                    id: "15C6MBV6tQ-DIZt7goBR89qQSXyzr9w8E",
+                    name: "チャイザル",
+                    cost: 0,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [1, 2, 28],
+                    no: 92,
+                },
+                {
+                    id: "18wS_7TUSyRxlKVAC4iSDH4wAzwGpB4c6",
+                    name: "チェール",
+                    cost: 0,
+                    rarities: 1,
+                    strength: null,
+                    effect: "",
+                    tags: [2,14],
+                    no: 94,
+                },
+                {
+                    id: "1NZJpDLplaMDVCLmg9_0pA4x6zWZOzxfB",
+                    name: "ペイオラン",
+                    cost: 1,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [13],
+                    no: 96,
+                },
+                {
+                    id: "11ydix2IffHBuhVZaVYXCJ4jgKQmaZBIh",
+                    name: "平和心円転",
+                    cost: 2,
+                    rarities: 3,
+                    strength: 3,
+                    effect: "",
+                    tags: [1],
+                    no: 98,
+                },
+                {
+                    id: "1hb-uraX_t7iH0Gy1U1PNHp3FzV-3bswI",
+                    name: "押し薙ぎ倒す",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 3,
+                    effect: "",
+                    tags: [28, 34],
+                    no: 100,
+                },
+                {
+                    id: "1pz9mzw4kYNbTyWChI0ndW3o-NNvUS3CU",
+                    name: "戒前曲",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 2,
+                    effect: "",
+                    tags: [2, 29],
+                    no: 102,
+                },
+                {
+                    id: "1_dtk0bq45pJ6ehpiZAUv5uAS-4MjaDI4",
+                    name: "神技のみねうち",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 2,
+                    effect: "",
+                    tags: [4],
+                    no: 104,
+                },
+                {
+                    id: "1XHS46YcXS3bmNdhHKYF4AZou0_mYAlkJ",
+                    name: "手慣れ手捌き",
+                    cost: 0,
+                    rarities: 2,
+                    strength: 5,
+                    effect: "",
+                    tags: [29, 34],
+                    no: 106,
+                },
+                {
+                    id: "17YOfF9JetRRY3v4_I7iCTxNM84Dkhp5M",
+                    name: "名残守り",
+                    cost: 0,
+                    rarities: 2,
+                    strength: 1,
+                    effect: "",
+                    tags: [2, 8],
+                    no: 108,
+                },
+                {
+                    id: "1Jdp41nrm95DtkVM_r2nYvmuNg6HjFzKO",
+                    name: "破刃の旋風",
+                    cost: 2,
+                    rarities: 3,
+                    strength: 4,
+                    effect: "",
+                    tags: [14],
+                    no: 110,
+                },
+                {
+                    id: "17eNyZWHEtVpJCpL-_B6ZuqgCGLIVolMC",
+                    name: "唐突覚醒",
+                    cost: 2,
+                    rarities: 3,
+                    strength: 4,
+                    effect: "",
+                    tags: [9, 34],
+                    no: 112,
+                },
+                {
+                    id: "1NRrRMZyBG5XgVuFSOALHsRacowO33X0X",
+                    name: "ラークガジャール",
+                    cost: 2,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [31],
+                    no: 114,
+                },
+                {
+                    id: "1KjebC7cAY8TKPz90iS0NuKIuSEDLH6d2",
+                    name: "メルフェス",
+                    cost: 0,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [1, 2],
+                    no: 116,
+                },
+                {
+                    id: "18CfpZ5FeTvR7DoGR0WzOOSH98LTcBG-Y",
+                    name: "オロビチューリ",
+                    cost: 0,
+                    rarities: 1,
+                    strength: null,
+                    effect: "",
+                    tags: [17, 19],
+                    no: 118,
+                },
+                {
+                    id: "11FpEqTaJQGoHuyC-eLMwAYwJUqPrx_bU",
+                    name: "空気抵抗の構え",
+                    cost: 2,
+                    rarities: 2,
+                    strength: 2,
+                    effect: "",
+                    tags: [3, 16, 34],
+                    no: 120,
+                },
+                {
+                    id: "15gB_qJif0FO1BPhvsPpairtn99LSF7GQ",
+                    name: "神技の構え",
+                    cost: 2,
+                    rarities: 2,
+                    strength: 2,
+                    effect: "",
+                    tags: [2, 3, 4],
+                    no: 122,
+                },
+                {
+                    id: "1tGyalKAV15GePfIc_8oAt7OV9hTjX0xm",
+                    name: "微動の剣技",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 1,
+                    effect: "",
+                    tags: [14],
+                    no: 124,
+                },
+                {
+                    id: "1lccd0a9pANGIlvM2JDSfKAKTDre43-CQ",
+                    name: "爆ぜる斬撃",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 2,
+                    effect: "",
+                    tags: [2, 17],
+                    no: 126,
+                },
+                {
+                    id: "1kFCFATeq3R9doD1auBGMrGPSypBlo0DO",
+                    name: "ロマン補給",
+                    cost: 0,
+                    rarities: 2,
+                    strength: 1,
+                    effect: "",
+                    tags: [1, 26, 34],
+                    no: 128,
+                },
+                {
+                    id: "1NSjsEjJUdn325hrdhiJqI1Ofm7au4cMd",
+                    name: "スライサー",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 2,
+                    effect: "",
+                    tags: [18],
+                    no: 130,
+                },
+                {
+                    id: "1DPr3O4TO69pM-Krq5t9DBNQ9l5ltnHY7",
+                    name: "始まりの回転斬り",
+                    cost: 3,
+                    rarities: 1,
+                    strength: 4,
+                    effect: "",
+                    tags: [15, 32, 35],
+                    no: 132,
+                },
+                {
+                    id: "1Wbu5bHPQvxh87QaqXLnkGSr-87zWLdS3",
+                    name: "時去り",
+                    cost: 3,
+                    rarities: 3,
+                    strength: 2,
+                    effect: "",
+                    tags: [35],
+                    no: 134,
+                },
+                {
+                    id: "1T4S1TlH8Xv012PgVTgxk5qw2DElaRh7z",
+                    name: "カームアーレル",
+                    cost: 0,
+                    rarities: 1,
+                    strength: null,
+                    effect: "",
+                    tags: [2, 3, 30],
+                    no: 136,
+                },
+                {
+                    id: "10j5BjLqe9hr1ZJ-PvMlcj78-1I8kjIYO",
+                    name: "ホシーウラ",
+                    cost: 0,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [1, 2, 23, 26],
+                    no: 138,
+                },
+                {
+                    id: "1wIgiMr3dmXu6Na6OgVKjv1HwSfuw93Cv",
+                    name: "リキノンス",
+                    cost: 0,
+                    rarities: 1,
+                    strength: null,
+                    effect: "",
+                    tags: [2],
+                    no: 140,
+                },
+                {
+                    id: "1wJIDPeznCV_vOk78bJfNlSC0S4T6ii7M",
+                    name: "弱点だ！",
+                    cost: 1,
+                    rarities: 2,
+                    strength: 1,
+                    effect: "",
+                    tags: [17, 36],
+                    no: 142,
+                },
+                {
+                    id: "1dR1oCCs69kerIO7HUDEjyW506GgtqLGZ",
+                    name: "ダウナーザック",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 2,
+                    effect: "",
+                    tags: [2, 16],
+                    no: 144,
+                },
+                {
+                    id: "1z2_4bgJ5XjkO67tPw8wyxoXIQT-A5k_j",
+                    name: "情熱烈撃",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 3,
+                    effect: "",
+                    tags: [1,34],
+                    no: 146,
+                },
+                {
+                    id: "1XSnpACY8NaiatF7r9ba8-2QXi6ka9J_v",
+                    name: "弱滅",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 2,
+                    effect: "",
+                    tags: [2,23,34],
+                    no: 148,
+                },
+                {
+                    id: "136zX7Kgq-dbfMU-aLuLw431lNcwRaptz",
+                    name: "透き通る刃",
+                    cost: 0,
+                    rarities: 3,
+                    strength: 1,
+                    effect: "",
+                    tags: [3],
+                    no: 150,
+                },
+                {
+                    id: "1Gr15QNXn2BPJxYy8v2STmDRbfCie-bOZ",
+                    name: "通芯のすれ違い",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 2,
+                    effect: "",
+                    tags: [14,15,17],
+                    no: 152,
+                },
+                {
+                    id: "1bdxJzJi4EFYX3lrkiG2-fiiYA1_H6QT8",
+                    name: "術毒の儀",
+                    cost: 2,
+                    rarities: 1,
+                    strength: 3,
+                    effect: "",
+                    tags: [19,37],
+                    no: 154,
+                },
+                {
+                    id: "1mUnk61fiXoUE5NpwifqKTw6RVTOiwF1c",
+                    name: "エンチャントアイス",
+                    cost: 2,
+                    rarities: 1,
+                    strength: 4,
+                    effect: "",
+                    tags: [5,31],
+                    no: 156,
+                },
+                {
+                    id: "1asAKklpsqjDN_8HDj2Gb9J1veTtAhhdG",
+                    name: "エッペト・ポロナ",
+                    cost: 1,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [2,33],
+                    no: 158,
+                },
+                {
+                    id: "1fVhF3F3RUfdIKlri2cJhnMpIG5rmYmJP",
+                    name: "サゴリム",
+                    cost: 0,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [31],
+                    no: 160,
+                },
+                {
+                    id: "1WJe634Fl4r-q3vbeTxImi8GjE6PcYU5_",
+                    name: "マフィエル",
+                    cost: 0,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [1,2],
+                    no: 162,
+                },
+                {
+                    id: "1xQeW3Vok_qx6-qfeRYHS6IDksZsL2qco",
+                    name: "原初の剣",
+                    cost: 2,
+                    rarities: 1,
+                    strength: 4,
+                    effect: "",
+                    tags: [1,2,14],
+                    no: 164,
+                },
+                {
+                    id: "1ubvaQR0mkVBL0vUD0H1fIZDqxx4DaHPY",
+                    name: "倍鳴り練武",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 2,
+                    effect: "",
+                    tags: [15,16,34,35],
+                    no: 166,
+                },
+                {
+                    id: "1uQh--AXVntw-01NwkPBHcG3HyMV46Kf5",
+                    name: "斬ってないのに斬れる",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 3,
+                    effect: "",
+                    tags: [16,34],
+                    no: 168,
+                },
+                {
+                    id: "1X_5Urlw89OxFadaeexadu7-x4FQW73vO",
+                    name: "空斬り三昧",
+                    cost: 1,
+                    rarities: 2,
+                    strength: 3,
+                    effect: "",
+                    tags: [13,14,17,34,35],
+                    no: 170,
+                },
+                {
+                    id: "1HCL_70ShSlcHX1HbUUtDQ4PZv39j6Qta",
+                    name: "一極の構え",
+                    cost: 0,
+                    rarities: 2,
+                    strength: 2,
+                    effect: "",
+                    tags: [3,10],
+                    no: 172,
+                },
+                {
+                    id: "15qBbKpPiHcvplyCAEyvRkCCAa4BwW2nf",
+                    name: "剣先の圧",
+                    cost: 0,
+                    rarities: 2,
+                    strength: 2,
+                    effect: "",
+                    tags: [22,34],
+                    no: 174,
+                },
+                {
+                    id: "143AIk_2AT-Ey_j2YgddyyGFnToyex9Fw",
+                    name: "オオマガトキ",
+                    cost: 0,
+                    rarities: 1,
+                    strength: null,
+                    effect: "",
+                    tags: [2,30,32,36],
+                    no: 176,
+                },
+                {
+                    id: "1oBsRT0OaZKD4cmwVveTNu5hLmxLq42ok",
+                    name: "ソウル・リーパー",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 1,
+                    effect: "",
+                    tags: [2,34],
+                    no: 178,
+                },
+                {
+                    id: "1k6WqKTsLYc9AeS6b33iQWhD_tex81PWt",
+                    name: "捨て身の構え",
+                    cost: 2,
+                    rarities: 3,
+                    strength: 2,
+                    effect: "",
+                    tags: [3,9,19,20],
+                    no: 180,
+                },
+                {
+                    id: "1lCpmH8awLN4lZxeVDbl4qnCxUPDkNHss",
+                    name: "パペットパロット",
+                    cost: 0,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [31],
+                    no: 182,
+                },
+                {
+                    id: "11VtnvEPZ9jgvjDo6orkfwv8GiiuJ5Lao",
+                    name: "ヒュンヌ",
+                    cost: 1,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [1,2,16],
+                    no: 184,
+                },
+                {
+                    id: "1w9_NMev-_rNcY-dmET3vmF1fXsJyQ-Sn",
+                    name: "レムクレイ",
+                    cost: 1,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [2,25],
+                    no: 186,
+                },
+                {
+                    id: "1nZtlJKeBQmKIFjYAl1svDkEGQwsBY0us",
+                    name: "カウラロリア",
+                    cost: 0,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [6],
+                    no: 188,
+                },
+                {
+                    id: "1k7eIlHGPwujnf5h7HjF-0dXlSVWpBGie",
+                    name: "ディクショナル",
+                    cost: 0,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [2,6,29],
+                    no: 190,
+                },
+                {
+                    id: "1EdPZodvkpnGgcnYtAUXsweevwk-vEFzM",
+                    name: "抜刀狂い無し",
+                    cost: 0,
+                    rarities: 2,
+                    strength: 1,
+                    effect: "",
+                    tags: [21],
+                    no: 192,
+                },
+                {
+                    id: "17KDv2yRtD1HqkNqJDx7E9oEYzyfe0mx4",
+                    name: "全能の構え",
+                    cost: 3,
+                    rarities: 3,
+                    strength: 2,
+                    effect: "",
+                    tags: [3,6,31],
+                    no: 194,
+                },
+                {
+                    id: "1j_hdmvAC0AvE4gqmFMJtxaOcxJkrOfJx",
+                    name: "ジュパンダ",
+                    cost: 3,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [17],
+                    no: 196,
+                },
+                {
+                    id: "1XzOIBjUOsbow3_IJcuTya06chxq7WbIq",
+                    name: "断天刃雨",
+                    cost: 2,
+                    rarities: 2,
+                    strength: 5,
+                    effect: "",
+                    tags: [14,15,35,36],
+                    no: 198,
+                },
+                {
+                    id: "1469q838wnMnX1EJI78FBOvp7s5o1EzxT",
+                    name: "グーランデスト",
+                    cost: 2,
+                    rarities: 1,
+                    strength: null,
+                    effect: "",
+                    tags: [2,6,16,26],
+                    no: 200,
+                },
+                {
+                    id: "1HdPIroFUC6hL-1x5bs1FHeTJA7QuRsv8",
+                    name: "ワグルマ",
+                    cost: 0,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [2,6],
+                    no: 202,
+                },
+                {
+                    id: "1-R7zT2jsTIYLSMxLThI5ASpXuWfnorMI",
+                    name: "ミシケール",
+                    cost: 0,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [1,2,17],
+                    no: 204,
+                },
+                {
+                    id: "1HMho9i8kTxha9_qbuUp5TBOGhOIzBaCn",
+                    name: "シェイディア",
+                    cost: 0,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [6,31],
+                    no: 206,
+                },
+                {
+                    id: "1FbI5R2u81ST4gGxC2HhPzRRvVFH4H1t2",
+                    name: "悪魔の斬波",
+                    cost: 1,
+                    rarities: 2,
+                    strength: 2,
+                    effect: "",
+                    tags: [2,6,36],
+                    no: 208,
+                },
+                {
+                    id: "1kI_HGEiMMPb8sg9JQ5pXRBxnOWCGqCIm",
+                    name: "悪魔の下ごしらえ",
+                    cost: 2,
+                    rarities: 2,
+                    strength: 3,
+                    effect: "",
+                    tags: [6,34,36],
+                    no: 210,
+                },
+                {
+                    id: "17TsqRFnpEivMremlETwo6DKdzhyRwgq4",
+                    name: "ウィンドブロウ",
+                    cost: 0,
+                    rarities: 2,
+                    strength: 5,
+                    effect: "",
+                    tags: [2,6,13,16],
+                    no: 212,
+                },
+                {
+                    id: "1TvTcB6IKZ3e7OT26wY0ZZxbF10GS1uct",
+                    name: "霜走り",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 2,
+                    effect: "",
+                    tags: [5,31,34],
+                    no: 214,
+                },
+                {
+                    id: "1UMCd1ZSo0z6u7kDgUUHxO3ao1EUHYJBq",
+                    name: "破悪獲",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 2,
+                    effect: "",
+                    tags: [1,6],
+                    no: 216,
+                },
+                {
+                    id: "1VskW_OUfXM_HTjymvlFsKAMWPQoLvvsx",
+                    name: "悪魔の斬り風",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 1,
+                    effect: "",
+                    tags: [6,36],
+                    no: 218,
+                },
+                {
+                    id: "1LKC_VpHv1IQbCF1P6gqcBlAwB9qxEqY-",
+                    name: "ギュレイミア",
+                    cost: 1,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [2,5,31],
+                    no: 220,
+                },
+                {
+                    id: "1rzS1Kf7LU3EbqrgCrcdSckZPO2HPH28s",
+                    name: "マクーガシズリア",
+                    cost: 0,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [9,25],
+                    no: 222,
+                },
+                {
+                    id: "1YndhQATMjSnpxQ0-4SCUdBb79y624vWg",
+                    name: "べフォルマ",
+                    cost: 0,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [1],
+                    no: 224,
+                },
+                {
+                    id: "1Uj4QUJPs74bsYAihyjwIPpWb4OsnMHvO",
+                    name: "クレイラ",
+                    cost: 0,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [16],
+                    no: 226,
+                },
+                {
+                    id: "18_4aOwW6T1aYQNVcAKUFuEq-7RkDpXmX",
+                    name: "獣王閃断",
+                    cost: 2,
+                    rarities: 2,
+                    strength: 3,
+                    effect: "",
+                    tags: [2,16],
+                    no: 228,
+                },
+                {
+                    id: "1Xe7o7gzcaQDYntlnpr-5vYON_IH26i9z",
+                    name: "壁陣技極",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 3,
+                    effect: "",
+                    tags: [8,20],
+                    no: 230,
+                },
+                {
+                    id: "1fhML5Cw32Zw8Q8Thj7rOWYSLLsxdhFGF",
+                    name: "ちょきり影撃",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 1,
+                    effect: "",
+                    tags: [2,31,36],
+                    no: 232,
+                },
+                {
+                    id: "1h2-BYk0RLExsMPXWl9SOS5AGsDcHZNgL",
+                    name: "神技の悪魔",
+                    cost: 1,
+                    rarities: 2,
+                    strength: 2,
+                    effect: "",
+                    tags: [4,6,36],
+                    no: 234,
+                },
+                {
+                    id: "1IJqehVhCIoYgS8a-itOHJZAw-8ZsEaMq",
+                    name: "破魔札の構え",
+                    cost: 1,
+                    rarities: 3,
+                    strength: 1,
+                    effect: "",
+                    tags: [1,2,3,21,34],
+                    no: 236,
+                },
+                {
+                    id: "1bdRKoqUsIlNqXIU-CAOZe3LvrvJejtj4",
+                    name: "虹闇の軌跡",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 5,
+                    effect: "",
+                    tags: [6,34],
+                    no: 238,
+                },
+                {
+                    id: "16cgvhXCKP57DIFy9qZL0GnM2eKk9jLm8",
+                    name: "シャボンエッジ",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 1,
+                    effect: "",
+                    tags: [2,16,28,37],
+                    no: 240,
+                },
+                {
+                    id: "1kFPB808ezCinySnE3PTUsKYLjLQb418S",
+                    name: "オロチ",
+                    cost: 2,
+                    rarities: 2,
+                    strength: 5,
+                    effect: "",
+                    tags: [13,34,36],
+                    no: 242,
+                },
+                {
+                    id: "1INzAi300Fqv6TLZrFm5mKIcG-YJTDJ3-",
+                    name: "生贄儀式",
+                    cost: 3,
+                    rarities: 2,
+                    strength: 4,
+                    effect: "",
+                    tags: [13,14,15,23,34],
+                    no: 244,
+                },
+                {
+                    id: "1LibvxQNjaQ_qYs9OOdMH_AgVY0Gkh_54",
+                    name: "狂いの遠吠え",
+                    cost: 1,
+                    rarities: 3,
+                    strength: 1,
+                    effect: "",
+                    tags: [2,12,26,34],
+                    no: 246,
+                },
+                {
+                    id: "1BCsW2UbQCMxwHMw_x1HkapbZ8NRDWgAk",
+                    name: "とある天才の正三角",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 5,
+                    effect: "",
+                    tags: [1,6,34],
+                    no: 248,
+                },
+                {
+                    id: "179InSpM6ndGwO25QFLkrjOEwtH8I7R6I",
+                    name: "秘術の誘い",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 3,
+                    effect: "",
+                    tags: [1,23,37],
+                    no: 250,
+                },
+                {
+                    id: "1JnpYtCHlkbQ9S0qdgWh6k_AV5l7ocBgx",
+                    name: "アザーティ",
+                    cost: 0,
+                    rarities: 2,
+                    strength: 1,
+                    effect: "",
+                    tags: [6,19,34],
+                    no: 252,
+                },
+                {
+                    id: "1oP83m6h5Tdg_fqFCD0gIOjo_WiHiEvmD",
+                    name: "オセル",
+                    cost: 0,
+                    rarities: 1,
+                    strength: null,
+                    effect: "",
+                    tags: [2,5,31],
+                    no: 254,
+                },
+                {
+                    id: "1en-Y-_B0475dmmtd_-yjNSfASZDIDwjc",
+                    name: "ケン",
+                    cost: 0,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [2,5,17,31],
+                    no: 256,
+                },
+                {
+                    id: "1YeBaEQ4jgo4hY7RxIygJljl0tVGlvdKN",
+                    name: "ワールドクリエイト",
+                    cost: 2,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [2,5,17],
+                    no: 258,
+                },
+                {
+                    id: "19153Ozz3ufqVzTINLDeWT_RmwzH9XKPA",
+                    name: "オラクル",
+                    cost: 0,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [5,9,17,31],
+                    no: 260,
+                },
+                {
+                    id: "1uWfupM29ne_6UbdlNcBGxPoDszLi1whU",
+                    name: "羽根つき",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 1,
+                    effect: "",
+                    tags: [2,19,22,35,37],
+                    no: 262,
+                },
+                {
+                    id: "1Ntc6cb7lOzyqzdtj8O_qThBTZC3dFmFI",
+                    name: "空処分断",
+                    cost: 2,
+                    rarities: 2,
+                    strength: 3,
+                    effect: "",
+                    tags: [14,17],
+                    no: 264,
+                },
+                {
+                    id: "1KlFnPrfc5x6Kxk7Wb44hzq21Ncq2t7ZQ",
+                    name: "フィデュル・テ",
+                    cost: 2,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [19],
+                    no: 266,
+                },
+                {
+                    id: "1n01ss1RxCenD7rOFm_RAboAfisGvwsqu",
+                    name: "ピュケスト",
+                    cost: 0,
+                    rarities: 1,
+                    strength: null,
+                    effect: "",
+                    tags: [2,22],
+                    no: 268,
+                },
+                {
+                    id: "1CYv7MWrR6KeqDkgNMRNT4UL0Vx0EZqlv",
+                    name: "ヒョルギナ",
+                    cost: 1,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [1,2],
+                    no: 270,
+                },
+                {
+                    id: "1PU7NiT20VygTlKN028UMrQGaCCugHqfc",
+                    name: "疑白のしかけ",
+                    cost: 2,
+                    rarities: 2,
+                    strength: 2,
+                    effect: "",
+                    tags: [28,37],
+                    no: 272,
+                },
+                {
+                    id: "1su2Avr_i1v95JLpPVOHoPUYYcL0iNiZQ",
+                    name: "ヘイスト突き",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 3,
+                    effect: "",
+                    tags: [13,35],
+                    no: 274,
+                },
+                {
+                    id: "1LSmnEJWizY_u38kB9JmSOSHVDMLksaUN",
+                    name: "受け刀",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 2,
+                    effect: "",
+                    tags: [2],
+                    no: 276,
+                },
+                {
+                    id: "1MfjSgf-5Bm3bSm09pduHv1JjJrPakAmS",
+                    name: "秘術の力回し",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 2,
+                    effect: "",
+                    tags: [2,18],
+                    no: 278,
+                },
+                {
+                    id: "1hud54UP6i8ZvT7NRDQfn95DjhqdPl8J_",
+                    name: "秘術の構え",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 5,
+                    effect: "",
+                    tags: [3],
+                    no: 280,
+                },
+                {
+                    id: "18aWwVTMwvqY7wm2bPa9Vc4enP2V8NLsm",
+                    name: "炎神舞",
+                    cost: 0,
+                    rarities: 2,
+                    strength: 1,
+                    effect: "",
+                    tags: [27,34],
+                    no: 282,
+                },
+                {
+                    id: "1NUx7feRhhJq27yfZ1DuPXH190zMUspfg",
+                    name: "拾いの見切り",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 2,
+                    effect: "",
+                    tags: [1,34],
+                    no: 284,
+                },
+                {
+                    id: "1Av9OPPh80CQQWE2Gzd06wChEko5kUR5h",
+                    name: "アドルフォーン",
+                    cost: 2,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [9,22],
+                    no: 286,
+                },
+                {
+                    id: "1WZQYrbjuirq3Go-wCItLgDedzYvffdSX",
+                    name: "エルトーラ",
+                    cost: 2,
+                    rarities: 1,
+                    strength: null,
+                    effect: "",
+                    tags: [2,12],
+                    no: 288,
+                },
+                {
+                    id: "1faoOeBpuWS8Fw2Th0skFalDP74Gvgzdk",
+                    name: "ハイズマ",
+                    cost: 0,
+                    rarities: 1,
+                    strength: null,
+                    effect: "",
+                    tags: [16,26],
+                    no: 290,
+                },
+                {
+                    id: "1BodYgA2Ru6y3oWfypBmZ-Zm9cy5f0joa",
+                    name: "フォイミュ",
+                    cost: 1,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [1,27],
+                    no: 292,
+                },
+                {
+                    id: "1t4-3gXBoHRtX2g7pLG7cpwKPuvNUFrOT",
+                    name: "魔神の獄",
+                    cost: 2,
+                    rarities: 3,
+                    strength: 2,
+                    effect: "",
+                    tags: [12],
+                    no: 294,
+                },
+                {
+                    id: "1STg6gUJYp834WJkidKzY7dY_wJzD4wgf",
+                    name: "挑戦者の旋律",
+                    cost: 2,
+                    rarities: 2,
+                    strength: 2,
+                    effect: "",
+                    tags: [2,29,34],
+                    no: 296,
+                },
+                {
+                    id: "1GtHHMt2jMq3WG1rHFqNTY42KmUhkDEdu",
+                    name: "マジカルサポート",
+                    cost: 1,
+                    rarities: 2,
+                    strength: 2,
+                    effect: "",
+                    tags: [2,37],
+                    no: 298,
+                },
+                {
+                    id: "1amZq-1aLfz4W6sQ3Kcahv1b5rgBqwvCW",
+                    name: "鋼の踊り",
+                    cost: 1,
+                    rarities: 2,
+                    strength: 4,
+                    effect: "",
+                    tags: [2],
+                    no: 300,
+                },
+                {
+                    id: "1TgTVLqz68e99iP82dzn-YMhrPTZu3BcF",
+                    name: "適当に合わせる",
+                    cost: 1,
+                    rarities: 2,
+                    strength: 2,
+                    effect: "",
+                    tags: [1,2],
+                    no: 302,
+                },
+                {
+                    id: "1N7N2YCKTfdHvH-ncRovZzNc1hNl20dNI",
+                    name: "海断",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 1,
+                    effect: "",
+                    tags: [13],
+                    no: 304,
+                },
+                {
+                    id: "1POGHCsg3gGv20luw8B2xzNoI0yj-Yq1h",
+                    name: "小技狩りの構え",
+                    cost: 0,
+                    rarities: 3,
+                    strength: 2,
+                    effect: "",
+                    tags: [3,15],
+                    no: 306,
+                },
+                {
+                    id: "1y-ZzRpWp-375Sy-IhInFeUoKVN7hxwq_",
+                    name: "貝上顕現",
+                    cost: 0,
+                    rarities: 3,
+                    strength: 4,
+                    effect: "",
+                    tags: [14,27,29,37],
+                    no: 308,
+                },
+                {
+                    id: "1FlNmKVOMEK_yC3tRskp32SJzUNjmDmPa",
+                    name: "剣術パンチ",
+                    cost: 0,
+                    rarities: 2,
+                    strength: 2,
+                    effect: "",
+                    tags: [2,10,17,34,36],
+                    no: 310,
+                },
+                {
+                    id: "1V8GxIEgN-Gn9Nlp2-M8c7_-B6HlXL9tu",
+                    name: "魔気剥ぎ",
+                    cost: 0,
+                    rarities: 3,
+                    strength: 1,
+                    effect: "",
+                    tags: [],
+                    no: 312,
+                },
+                {
+                    id: "1QGOXtlgwOvI0CCv3hxn7dLilY7c6wUwV",
+                    name: "エディター",
+                    cost: 0,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [1,2,13],
+                    no: 314,
+                },
+                {
+                    id: "1VOb-BF0JNKLfNCpw1rBEeanxipn8NuQd",
+                    name: "プロメテウス",
+                    cost: 3,
+                    rarities: 3,
+                    strength: 4,
+                    effect: "",
+                    tags: [15,34],
+                    no: 316,
+                },
+                {
+                    id: "1Fp6ICDolTCXnHsSklPGyXWLl8slPOBOP",
+                    name: "不死鳥のレクイエム",
+                    cost: 3,
+                    rarities: 3,
+                    strength: 2,
+                    effect: "",
+                    tags: [2,4,14,20],
+                    no: 318,
+                },
+                {
+                    id: "1JhWgI0gCrUEqkLRNz37WQJ7095mx-lew",
+                    name: "首狩り兎",
+                    cost: 1,
+                    rarities: 3,
+                    strength: 5,
+                    effect: "",
+                    tags: [10,13,34],
+                    no: 320,
+                },
+                {
+                    id: "1NW-Mu7mudgLbhu_dRfzr9sV-Da6JE7f_",
+                    name: "雪月華",
+                    cost: 1,
+                    rarities: 3,
+                    strength: 3,
+                    effect: "",
+                    tags: [5,11,13,31,34],
+                    no: 322,
+                },
+                {
+                    id: "19Y-W3A65LkN1UNrWAYLSC-PEaBD-TNOI",
+                    name: "滑り込みセイバー",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 2,
+                    effect: "",
+                    tags: [],
+                    no: 324,
+                },
+                {
+                    id: "18Y3cgqkCi-9MPt3Pth9O9R861KPMeCDG",
+                    name: "スキュルカザ",
+                    cost: 0,
+                    rarities: 1,
+                    strength: null,
+                    effect: "",
+                    tags: [11,30],
+                    no: 326,
+                },
+                {
+                    id: "1V7hUHp1KyCxuu6nkvgoSYDoeH7a85OVX",
+                    name: "バン・フォー・エゴ",
+                    cost: 2,
+                    rarities: 3,
+                    strength: 2,
+                    effect: "",
+                    tags: [22,24,37],
+                    no: 328,
+                },
+                {
+                    id: "1566jWq8-DzyNzstAGBR983P0N2D8tKbo",
+                    name: "浮転斬宙",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 1,
+                    effect: "",
+                    tags: [2,7,11],
+                    no: 330,
+                },
+                {
+                    id: "1Oh6o2obSAfYEXFxhC8bUqOjME2ma4sw3",
+                    name: "オロアバンラス",
+                    cost: 3,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [7,19],
+                    no: 332,
+                },
+                {
+                    id: "1Vc0ps-GEB8JDxCjAZ1sTCf_Nz42a_uD7",
+                    name: "レフェニア",
+                    cost: 1,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [1,2,29],
+                    no: 334,
+                },
+                {
+                    id: "1yeJ0uiNpPUa1XN4sPW9QSVn9C9KLRMOp",
+                    name: "ミューレ",
+                    cost: 0,
+                    rarities: 1,
+                    strength: null,
+                    effect: "",
+                    tags: [2,7],
+                    no: 336,
+                },
+                {
+                    id: "1TM3FblLLTo8LsOwXTDnbt12902GRdlvB",
+                    name: "念動落裁",
+                    cost: 2,
+                    rarities: 1,
+                    strength: 4,
+                    effect: "",
+                    tags: [7,16,34],
+                    no: 338,
+                },
+                {
+                    id: "19ceRj2ggr1HaHbrsxKkGqlPJozUaCwkd",
+                    name: "超波紋",
+                    cost: 2,
+                    rarities: 3,
+                    strength: 2,
+                    effect: "",
+                    tags: [2,7,28],
+                    no: 340,
+                },
+                {
+                    id: "1BwqsbWY5ngvoD4-6SIiNr347qGx9LquX",
+                    name: "星座占い",
+                    cost: 1,
+                    rarities: 2,
+                    strength: 1,
+                    effect: "",
+                    tags: [1,2,26,34],
+                    no: 342,
+                },
+                {
+                    id: "1uKv39WDk6ubJRE3UNG4XaO_ORTKCYTm1",
+                    name: "クロスストライク",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 2,
+                    effect: "",
+                    tags: [7,13,14,34],
+                    no: 344,
+                },
+                {
+                    id: "1wMDZgabfqwBePNiYKTmqXfgCcD4XcWN6",
+                    name: "念動の瞬き",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 1,
+                    effect: "",
+                    tags: [2,7],
+                    no: 346,
+                },
+                {
+                    id: "1W5nPM9HnuW0EALYMkyBw2a0W4xHvdWDP",
+                    name: "念動スピン",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 2,
+                    effect: "",
+                    tags: [7],
+                    no: 348,
+                },
+                {
+                    id: "1jDLC_fIG5QSAqSid3juSr0VHk97FXcUE",
+                    name: "重力斬り",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 1,
+                    effect: "",
+                    tags: [7,11,16,34],
+                    no: 350,
+                },
+                {
+                    id: "1rzDnaSFyIgwaMsOFJ_nPTBeVu-gWWNR3",
+                    name: "開闢の星",
+                    cost: 3,
+                    rarities: 3,
+                    strength: 1,
+                    effect: "",
+                    tags: [14,25],
+                    no: 352,
+                },
+                {
+                    id: "1EWAM0rvJBDYxPdnmj5d2Y2TzRzrP99B8",
+                    name: "冬将軍",
+                    cost: 2,
+                    rarities: 3,
+                    strength: 4,
+                    effect: "",
+                    tags: [5,17,22,34],
+                    no: 354,
+                },
+                {
+                    id: "17_D9hNkwra2GHrH7nufsVEnZ3e4DGiZu",
+                    name: "脆元宇宙",
+                    cost: 3,
+                    rarities: 2,
+                    strength: 1,
+                    effect: "",
+                    tags: [17,35],
+                    no: 356,
+                },
+                {
+                    id: "1nOzZyhy-ixXt64a7bUCFoWw-NQrb9wDk",
+                    name: "スティールライフ",
+                    cost: 3,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [6,12,19,27,37],
+                    no: 358,
+                },
+                {
+                    id: "13vU0O15pgCtrXLLQXfCbI2c81_F1r_-A",
+                    name: "爪痕",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 3,
+                    effect: "",
+                    tags: [2,17,19,22,35],
+                    no: 360,
+                },
+                {
+                    id: "1-62B4zJukC2Y9_JEZz8ITFI0diryWGFu",
+                    name: "ヒョウテンカ",
+                    cost: 1,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [2,5,29,31],
+                    no: 362,
+                },
+                {
+                    id: "1c7LMzd45lS5eZLKD7vSOk_IftjzX7cva",
+                    name: "ジデア",
+                    cost: 0,
+                    rarities: 1,
+                    strength: null,
+                    effect: "",
+                    tags: [916],
+                    no: 364,
+                },
+                {
+                    id: "1fiG2VvzYwTy6Ik_qArxbrUJ8DKgHONQZ",
+                    name: "反撃の一手",
+                    cost: 3,
+                    rarities: 3,
+                    strength: 4,
+                    effect: "",
+                    tags: [9,13,28,31,34,35],
+                    no: 366,
+                },
+                {
+                    id: "1rLSOoC5QrScPfUvRtJLI4eJ0r4LxTyOQ",
+                    name: "永環宇宙",
+                    cost: 3,
+                    rarities: 3,
+                    strength: 1,
+                    effect: "",
+                    tags: [28],
+                    no: 368,
+                },
+                {
+                    id: "1wYXmJqv1wXTJM-ntHRBLw1XBb5RM1416",
+                    name: "大隊の構え",
+                    cost: 3,
+                    rarities: 3,
+                    strength: 4,
+                    effect: "",
+                    tags: [3,22,31,34],
+                    no: 370,
+                },
+                {
+                    id: "1wcjaojIYeJ6V34ar9PrYLjJcHiJgDoCA",
+                    name: "ルーンの羅列",
+                    cost: 0,
+                    rarities: 3,
+                    strength: 2,
+                    effect: "",
+                    tags: [2,5,17,29,31,34],
+                    no: 372,
+                },
+                {
+                    id: "1HINcpjFEDZtx-yywQ_JHQl3MXWMe2D3d",
+                    name: "ブラックブレード",
+                    cost: 2,
+                    rarities: 2,
+                    strength: 2,
+                    effect: "",
+                    tags: [16,17,27,34,36],
+                    no: 374,
+                },
+                {
+                    id: "1lKfCtmbOiuZvvm8iC6waa59jTkiqYp6w",
+                    name: "修羅糸巡り",
+                    cost: 2,
+                    rarities: 2,
+                    strength: 3,
+                    effect: "",
+                    tags: [14,25,35],
+                    no: 376,
+                },
+                {
+                    id: "1LhucGMH7WT30YzjkJq-EibgmHpwLH_tH",
+                    name: "ジェンパース",
+                    cost: 1,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [17],
+                    no: 378,
+                },
+                {
+                    id: "1EU8cNnQlSRVUf9TSzqLWirmy4cG5YIjw",
+                    name: "滅封剣",
+                    cost: 1,
+                    rarities: 3,
+                    strength: 2,
+                    effect: "",
+                    tags: [2,3,14,31,34],
+                    no: 380,
+                },
+                {
+                    id: "14WsWTouRtlUKR0fDBQPdccScVmR57HNK",
+                    name: "剣烈ショックウェーブ",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 1,
+                    effect: "",
+                    tags: [1,2,14,34,35],
+                    no: 382,
+                },
+                {
+                    id: "1XJAon_N0p-8B2hRIL8zSzTcVTxuwfu9A",
+                    name: "敵意以て散る紅葉かな",
+                    cost: 1,
+                    rarities: 3,
+                    strength: 3,
+                    effect: "",
+                    tags: [18,22,34],
+                    no: 384,
+                },
+                {
+                    id: "11npJJVLuqW2QDzTwcrsNJ07JqNydEs0_",
+                    name: "秘術の念動",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 3,
+                    effect: "",
+                    tags: [1,7,34],
+                    no: 386,
+                },
+                {
+                    id: "1Uqq18-lMjMLKpiXLsi0N-JxcY340mlb1",
+                    name: "神技のノック",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 2,
+                    effect: "",
+                    tags: [2,4],
+                    no: 388,
+                },
+                {
+                    id: "1YNwSjlZ1Z0POgxzpKKfVjlta9jRM7jd0",
+                    name: "レイピア刺し",
+                    cost: 0,
+                    rarities: 2,
+                    strength: 2,
+                    effect: "",
+                    tags: [15,35],
+                    no: 390,
+                },
+                {
+                    id: "1zyaN6iAL7PcB9pZWl3MjQVRpi4BiSMYa",
+                    name: "無法斬",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 5,
+                    effect: "",
+                    tags: [1,34],
+                    no: 392,
+                },
+                {
+                    id: "1XQk9WYAtBimwYY41UpepUeGPdL-dQ8g4",
+                    name: "ドロック",
+                    cost: 1,
+                    rarities: 1,
+                    strength: null,
+                    effect: "",
+                    tags: [9],
+                    no: 394,
+                },
+                {
+                    id: "1bzt7ox9kMVW0thLxNqy52Nw7aQYa0LPL",
+                    name: "雷響",
+                    cost: 3,
+                    rarities: 2,
+                    strength: 1,
+                    effect: "",
+                    tags: [2,17,19,37],
+                    no: 396,
+                },
+                {
+                    id: "1omMfMC7dLMmOTH_G671JDlK7r1mxWfJO",
+                    name: "トリックアクション",
+                    cost: 0,
+                    rarities: 3,
+                    strength: 2,
+                    effect: "",
+                    tags: [1,2,26,36],
+                    no: 398,
+                },
+                {
+                    id: "1tPPuBDXHFt0QQWyD-7lOfGmqlZtTlr0z",
+                    name: "リーベンス",
+                    cost: 0,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [1,2,11,30,31],
+                    no: 400,
+                },
+                {
+                    id: "1_2KKbTjlBxRdT_yUElh0-_D1sPXroZp6",
+                    name: "ミャルカ",
+                    cost: 1,
+                    rarities: 1,
+                    strength: null,
+                    effect: "",
+                    tags: [2,7],
+                    no: 402,
+                },
+                {
+                    id: "1J4Wccup5H-tpLHCNa8fW5ksCX24ukeCF",
+                    name: "ウクトミコシ",
+                    cost: 0,
+                    rarities: 1,
+                    strength: null,
+                    effect: "",
+                    tags: [2,26,28],
+                    no: 404,
+                },
+                {
+                    id: "17wWHKzoYUCvo6J5CUm9a8tUHkpK-eTEl",
+                    name: "ひえや花",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 1,
+                    effect: "",
+                    tags: [2,5,31,34],
+                    no: 406,
+                },
+                {
+                    id: "1nQiLzu2-uJbmnG4qzlxqyAzYCHcM1ygM",
+                    name: "飛翔斬・イルカ",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 3,
+                    effect: "",
+                    tags: [2,15,28,37],
+                    no: 408,
+                },
+                {
+                    id: "1REUm3TnTs0hQXQdaz6AIEy_ciQe8O1Oh",
+                    name: "秘術の過ぎ通り",
+                    cost: 1,
+                    rarities: 2,
+                    strength: 5,
+                    effect: "",
+                    tags: [16,34],
+                    no: 410,
+                },
+                {
+                    id: "1a_ZRiebBCEG0d5M-6l1xX7EnCM2TuMto",
+                    name: "宇宙の呼吸",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 2,
+                    effect: "",
+                    tags: [7,26,31,34],
+                    no: 412,
+                },
+                {
+                    id: "1kVlxPe6IC1Pn0WYQQoIHfDre5FR5Uugp",
+                    name: "Re・風散",
+                    cost: 0,
+                    rarities: 3,
+                    strength: 1,
+                    effect: "",
+                    tags: [8,16,37],
+                    no: 414,
+                },
+                {
+                    id: "1lIric7CZKMH8cFfctlviyYiNgD8bNpmd",
+                    name: "超魔道砲",
+                    cost: 3,
+                    rarities: 3,
+                    strength: 4,
+                    effect: "",
+                    tags: [6,17,34],
+                    no: 416,
+                },
+                {
+                    id: "1F79V0TP-aVHdPERpGDuNyGEkRlkDtKZa",
+                    name: "摂理のうずまき",
+                    cost: 2,
+                    rarities: 3,
+                    strength: 4,
+                    effect: "",
+                    tags: [2,26,37],
+                    no: 418,
+                },
+                {
+                    id: "118D6GhieRi1DDlSXx4s53-j7C-iXY9ce",
+                    name: "不死の念",
+                    cost: 0,
+                    rarities: 3,
+                    strength: 3,
+                    effect: "",
+                    tags: [7],
+                    no: 420,
+                },
+                {
+                    id: "1HU0k3VD-xsXhwY7DAVebg1BRU8Tgii4f",
+                    name: "シン・プレサ",
+                    cost: 3,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [17,24],
+                    no: 422,
+                },
+                {
+                    id: "1VLc35m2x-pNBPYN109YH8EmdOlUEkK2q",
+                    name: "秘術の視覚予測",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 5,
+                    effect: "",
+                    tags: [1,2],
+                    no: 424,
+                },
+                {
+                    id: "1oLIqjyPSP51vs_ZwSeCQmvqYxZevmvye",
+                    name: "割れ空の雨に踊る",
+                    cost: 3,
+                    rarities: 3,
+                    strength: 4,
+                    effect: "",
+                    tags: [16,35,36,37],
+                    no: 426,
+                },
+                {
+                    id: "19usJriNEHph5NlWe0HOXzI8OjkIDb7Yk",
+                    name: "ヴァルカビータ",
+                    cost: 1,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [30,31],
+                    no: 428,
+                },
+                {
+                    id: "1tqZ-pz96bWtWN0m1zm_xIM7huLQf237p",
+                    name: "トリーシェア",
+                    cost: 0,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [1,2,23,26],
+                    no: 430,
+                },
+                {
+                    id: "1xrJ4COBLsbdVot08OkS-H5Gu0LeGkIaS",
+                    name: "天煌の賭け札",
+                    cost: 1,
+                    rarities: 2,
+                    strength: 2,
+                    effect: "",
+                    tags: [1,26,34],
+                    no: 432,
+                },
+                {
+                    id: "1PH-sm6JvRAe_e12t_ZiVg2Z3r-icHsWQ",
+                    name: "そのLUKは必然か",
+                    cost: 3,
+                    rarities: 2,
+                    strength: 1,
+                    effect: "",
+                    tags: [1,26,31,34,36],
+                    no: 434,
+                },
+                {
+                    id: "1vCL89QbRhHyOTAPEXxL8aDBj6g7t6i9n",
+                    name: "新たなる価値観",
+                    cost: 3,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [1,2,23,26],
+                    no: 436,
+                },
+                {
+                    id: "1CUvzAS0KYPvRgpHEEitwTPbF9rl0LiJK",
+                    name: "かるた",
+                    cost: 0,
+                    rarities: 1,
+                    strength: null,
+                    effect: "",
+                    tags: [9,19,37],
+                    no: 438,
+                },
+                {
+                    id: "1sOk-bx05MhRy7eNyC9pkF0GHJivQL5LY",
+                    name: "夜嵐くぐり",
+                    cost: 1,
+                    rarities: 3,
+                    strength: 2,
+                    effect: "",
+                    tags: [1,31,34],
+                    no: 440,
+                },
+                {
+                    id: "1znBucflp1g033O2_TQXnKK0MgArMeFnw",
+                    name: "構え直し戦法",
+                    cost: 1,
+                    rarities: 3,
+                    strength: 2,
+                    effect: "",
+                    tags: [2,3,31],
+                    no: 442,
+                },
+                {
+                    id: "1Qz1V_zCfEY7oueShHdc-j42Z6GBE1B35",
+                    name: "秘術の飛刃",
+                    cost: 1,
+                    rarities: 2,
+                    strength: 2,
+                    effect: "",
+                    tags: [2,16],
+                    no: 444,
+                },
+                {
+                    id: "15NHZYLu-4tN0Phz7t9fQOzq5kCyn2yOy",
+                    name: "キャパスター",
+                    cost: 1,
+                    rarities: 1,
+                    strength: null,
+                    effect: "",
+                    tags: [1,2],
+                    no: 446,
+                },
+                {
+                    id: "1-scxtjg8X4A_-q4XwJ48Z5HQgaJ85Xu4",
+                    name: "英断と精神論",
+                    cost: 3,
+                    rarities: 3,
+                    strength: 2,
+                    effect: "",
+                    tags: [19,20,27],
+                    no: 448,
+                },
+                {
+                    id: "1vEHLDeznXYq9r_1bEQDbbUIwB-UwQdcg",
+                    name: "月夜の異形斬り",
+                    cost: 0,
+                    rarities: 3,
+                    strength: 5,
+                    effect: "",
+                    tags: [1,2,5,31,34,36],
+                    no: 450,
+                },
+                {
+                    id: "1pyJeDap0k72ayxnt9h8X9GHGG5fslwpb",
+                    name: "猫の手",
+                    cost: 2,
+                    rarities: 2,
+                    strength: 2,
+                    effect: "",
+                    tags: [1,31,35],
+                    no: 452,
+                },
+                {
+                    id: "1eFTo_E33CMtaTI6GZUnn0wlkbuqce3n2",
+                    name: "無限斬",
+                    cost: 3,
+                    rarities: 3,
+                    strength: 4,
+                    effect: "",
+                    tags: [7,10,16,37],
+                    no: 454,
+                },
+                {
+                    id: "1k4jSX4MdLO2AcBdm4gon0cigk48zkcZj",
+                    name: "コビウス",
+                    cost: 1,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [1,25],
+                    no: 456,
+                },
+                {
+                    id: "1yatrTowSE_Sr0qx-_oB316CKraqGVyEN",
+                    name: "盛者必勝・パーリナイ",
+                    cost: 2,
+                    rarities: 2,
+                    strength: 3,
+                    effect: "",
+                    tags: [15,16],
+                    no: 458,
+                },
+                {
+                    id: "1hXAUel9E1qtyMe0XVCWsEJo8G_W_4f-e",
+                    name: "影の再生師",
+                    cost: 2,
+                    rarities: 3,
+                    strength: 3,
+                    effect: "",
+                    tags: [14,34,35],
+                    no: 460,
+                },
+                {
+                    id: "1W9LBx-Vn3WkhXorwJ9ga8CuOvyuOcYWZ",
+                    name: "九尾",
+                    cost: 0,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [2,15,31,35],
+                    no: 462,
+                },
+                {
+                    id: "1-4z129T4jMdOqgXKtRIYMV-c7EjggcOJ",
+                    name: "エイシャ",
+                    cost: 1,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [19],
+                    no: 464,
+                },
+                {
+                    id: "1gW271U_Ko6BdnYnXkcdIwd_dUhjTMrIf",
+                    name: "心の内に宿る物",
+                    cost: 3,
+                    rarities: 3,
+                    strength: 5,
+                    effect: "",
+                    tags: [13,34,35],
+                    no: 466,
+                },
+                {
+                    id: "1vaMu_OWBkmpjGUC9GoYRtduCL1bbO4gR",
+                    name: "念猫宿し",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 1,
+                    effect: "",
+                    tags: [1,5,7,11,34],
+                    no: 468,
+                },
+                {
+                    id: "1mkRmx2R9rnaqwi5gdb3ypH-jmNkbP30v",
+                    name: "氷華椿",
+                    cost: 1,
+                    rarities: 3,
+                    strength: 2,
+                    effect: "",
+                    tags: [5,7,27,31,34],
+                    no: 470,
+                },
+                {
+                    id: "11b0sN6lhWEBZNYxNBGGGQY4yUMc5TaG4",
+                    name: "遅れる斬撃・クロノス",
+                    cost: 2,
+                    rarities: 3,
+                    strength: 2,
+                    effect: "",
+                    tags: [13,14,34,35],
+                    no: 472,
+                },
+                {
+                    id: "1T54tRyGSrC1q_6v0SS4Xo95hq5OGcRiA",
+                    name: "魔力還元",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 3,
+                    effect: "",
+                    tags: [6,37],
+                    no: 474,
+                },
+                {
+                    id: "1WYWM4ND8f2fQuPJqKgw-q0yMEqV7DlkP",
+                    name: "ある夏の日・・・",
+                    cost: 0,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [6,31],
+                    no: 476,
+                },
+                {
+                    id: "1VrgGP7oVRxbTiyP8hOaIvIcIB3_TJhai",
+                    name: "桜木一閃",
+                    cost: 3,
+                    rarities: 3,
+                    strength: 4,
+                    effect: "",
+                    tags: [5,13,34],
+                    no: 478,
+                },
+                {
+                    id: "1EaTzgT27zkLR6jJO-yEsfXofZBEAbzJZ",
+                    name: "涙天に咲く永久に哀し",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 2,
+                    effect: "",
+                    tags: [1,2,13,26,27,34],
+                    no: 480,
+                },
+                {
+                    id: "1ZA72_0oiqgBsR1VEPnXOEljSD46eG8-x",
+                    name: "支配弓術",
+                    cost: 2,
+                    rarities: 3,
+                    strength: 3,
+                    effect: "",
+                    tags: [15,23,37],
+                    no: 482,
+                },
+                {
+                    id: "1TCq7rYsA33kSFpqn6znELHVpptw8x8nQ",
+                    name: "戦局を支配せよ",
+                    cost: 0,
+                    rarities: 3,
+                    strength: 3,
+                    effect: "",
+                    tags: [13,17,34],
+                    no: 484,
+                },
+                {
+                    id: "1b7jxiQL4lXU2nKHCAv5DLl1NIebBlENm",
+                    name: "恐悦至極の黒瞳",
+                    cost: 1,
+                    rarities: 3,
+                    strength: 3,
+                    effect: "",
+                    tags: [2,14,15,19,34,35],
+                    no: 486,
+                },
+                {
+                    id: "1fGU2Y4Y5kr2b7wX1PenaN3XDh691QfxD",
+                    name: "荒波神楽",
+                    cost: 2,
+                    rarities: 2,
+                    strength: 3,
+                    effect: "",
+                    tags: [2,4,15,37],
+                    no: 488,
+                },
+                {
+                    id: "1dVCAgcVzpk_erE6_e67kjuEV4fyrPE_e",
+                    name: "輪廻",
+                    cost: 0,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [1,2],
+                    no: 490,
+                },
+                {
+                    id: "1S7-x59NWLx9Z119PybPXnCo7Ur8c9Z-Z",
+                    name: "疾風迅雷",
+                    cost: 2,
+                    rarities: 3,
+                    strength: 3,
+                    effect: "",
+                    tags: [2,13],
+                    no: 492,
+                },
+                {
+                    id: "1A_q-JRdZ7uIKRuJ4rO01p2eYpIVKBFUV",
+                    name: "黒焦げの刃物",
+                    cost: 0,
+                    rarities: 3,
+                    strength: 5,
+                    effect: "",
+                    tags: [],
+                    no: 494,
+                },
+                {
+                    id: "13s4CfeowoLtBlFCH5UFQUo-QGTjJ-yz0",
+                    name: "詩人のたられば綴り",
+                    cost: 2,
+                    rarities: 1,
+                    strength: 1,
+                    effect: "",
+                    tags: [9,28,34],
+                    no: 496,
+                },
+                {
+                    id: "12c9594FQ1yJo0YHfGDxgjABGfRSfiB8Q",
+                    name: "くるくる襲撃",
+                    cost: 1,
+                    rarities: 2,
+                    strength: 2,
+                    effect: "",
+                    tags: [1,16,34],
+                    no: 498,
+                },
+                {
+                    id: "1IiowDjaGuyHNq18HAsVY0MEqp4vN80Ze",
+                    name: "再生の心",
+                    cost: 0,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [2,3,31],
+                    no: 500,
+                },
+                {
+                    id: "17jtV6_WMMxpG9YSXntUXywJeRXrXigBJ",
+                    name: "ケモノ化",
+                    cost: 3,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [17,19,27,37],
+                    no: 502,
+                },
+                {
+                    id: "1t9JPTQTjq2EtYpWZ5a-aJtKDF1jCYmBn",
+                    name: "神域",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 1,
+                    effect: "",
+                    tags: [4,17,19,22,31,37],
+                    no: 504,
+                },
+                {
+                    id: "109h3pCWewIlacSqFjDWTt_m7_He0Obua",
+                    name: "剣王流・月と太陽",
+                    cost: 2,
+                    rarities: 1,
+                    strength: 3,
+                    effect: "",
+                    tags: [13,15,34,35],
+                    no: 506,
+                },
+                {
+                    id: "1Hc8w3zJN-6oe5KV0DRIsgeEgkoHaidyu",
+                    name: "ただの線香",
+                    cost: 0,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [1,2,27],
+                    no: 508,
+                },
+                {
+                    id: "1QrOVmvKVT7hVr0Gq3FFLclnx6CWYWQJO",
+                    name: "ウォゾム",
+                    cost: 2,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [1,2,6],
+                    no: 510,
+                },
+                {
+                    id: "1Rl6WRdshAJXHNriCe0dfxaNykGtw8sLU",
+                    name: "剣王流・朝露の潮凪",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 3,
+                    effect: "",
+                    tags: [8,14],
+                    no: 512,
+                },
+                {
+                    id: "1XNAWli5tw7nAK738nZ1RSlfVZ1gMoFmo",
+                    name: "剣王流・宵闇の加護",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 5,
+                    effect: "",
+                    tags: [8,11],
+                    no: 514,
+                },
+                {
+                    id: "11R2wytFer09eVWs9S3aGSy8VwrpVkzcO",
+                    name: "ステップスルー",
+                    cost: 1,
+                    rarities: 3,
+                    strength: 1,
+                    effect: "",
+                    tags: [1,2,10,34],
+                    no: 516,
+                },
+                {
+                    id: "1VKNfdO6EUBDtQ3NYlOOdqrO2t1fZSTfz",
+                    name: "シメツバエの戯れ",
+                    cost: 3,
+                    rarities: 2,
+                    strength: 3,
+                    effect: "",
+                    tags: [2,35],
+                    no: 518,
+                },
+                {
+                    id: "18fsZzdvD7WueF74KC07P227TxGNTwwre",
+                    name: "守りの剣域",
+                    cost: 1,
+                    rarities: 3,
+                    strength: 1,
+                    effect: "",
+                    tags: [1,2,3,11,34,35],
+                    no: 520,
+                },
+                {
+                    id: "1YoS8agf0XbOZc9i0kBd5PL5wckX3VYMi",
+                    name: "気迫",
+                    cost: 3,
+                    rarities: 2,
+                    strength: 2,
+                    effect: "",
+                    tags: [1,10,34,37],
+                    no: 522,
+                },
+                {
+                    id: "1r4BuBwz7kg3RLT9HnteBwcIJrTBBWmA_",
+                    name: "超天絶閃撃乱刃",
+                    cost: 3,
+                    rarities: 3,
+                    strength: 2,
+                    effect: "",
+                    tags: [17,34],
+                    no: 524,
+                },
+                {
+                    id: "1DC4qwYrr0Oz2Q8jgyPo2bqBpSIbjHDc4",
+                    name: "氷黒鳥・レグザス",
+                    cost: 1,
+                    rarities: 3,
+                    strength: 3,
+                    effect: "",
+                    tags: [10,16,34],
+                    no: 526,
+                },
+                {
+                    id: "1-VdgmA6at4S-Bc1huYQNSgF76To0kPej",
+                    name: "リキュール",
+                    cost: 0,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [2,29],
+                    no: 528,
+                },
+                {
+                    id: "1-B9T2dFiENpBk8lqNQbK_jzQXdFRMP7S",
+                    name: "無覚百影",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 5,
+                    effect: "",
+                    tags: [19,23,36],
+                    no: 530,
+                },
+                {
+                    id: "1UV-oMWb7eFQ2M8VXjMeZJU2gaghO4RZL",
+                    name: "ナイファー・スニーク",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 2,
+                    effect: "",
+                    tags: [2,31,34],
+                    no: 532,
+                },
+                {
+                    id: "1oaKCBjwI9UBRvb8Kz1PWReJ67gzd3dvR",
+                    name: "富者狩り",
+                    cost: 1,
+                    rarities: 2,
+                    strength: 2,
+                    effect: "",
+                    tags: [1,2,23,34],
+                    no: 534,
+                },
+                {
+                    id: "1EvxhMsv4IzTrQLOEQBV_rA32kJsjwXWW",
+                    name: "ミュカリナの柱",
+                    cost: 2,
+                    rarities: 2,
+                    strength: 2,
+                    effect: "",
+                    tags: [23,29,36,37],
+                    no: 536,
+                },
+                {
+                    id: "14hshp-EKBfIF3cjdJW5aunfgpzRH5NIG",
+                    name: "支配投術",
+                    cost: 3,
+                    rarities: 1,
+                    strength: 4,
+                    effect: "",
+                    tags: [9,17,24],
+                    no: 538,
+                },
+                {
+                    id: "14s6V6OlH2Q2Kw1xgsuDZ2yWxTdjA6HXx",
+                    name: "剣奏協和・朗々",
+                    cost: 1,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [2,26],
+                    no: 540,
+                },
+                {
+                    id: "1Q1NQ8jgjB8RU4Xjya9eWTLPtuAWjGAj2",
+                    name: "刹光の剣",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 1,
+                    effect: "",
+                    tags: [13,34],
+                    no: 542,
+                },
+                {
+                    id: "1v1ldeOrcXaSTwHJ6uKbCEpEqjHOqXdae",
+                    name: "双剣士のデュエット",
+                    cost: 2,
+                    rarities: 3,
+                    strength: 2,
+                    effect: "",
+                    tags: [2,12,16,34],
+                    no: 544,
+                },
+                {
+                    id: "14XnUxac4vIzKXITQNC-PfSaBZ0paN3W_",
+                    name: "無尽の理",
+                    cost: 2,
+                    rarities: 2,
+                    strength: 3,
+                    effect: "",
+                    tags: [1,2,34,36],
+                    no: 546,
+                },
+                {
+                    id: "1iFKqKed9JBWI29sGy3MlP0Dh_xjJlj7q",
+                    name: "幻覚妖精・睡蓮",
+                    cost: 2,
+                    rarities: 3,
+                    strength: 2,
+                    effect: "",
+                    tags: [6,17,26],
+                    no: 548,
+                },
+                {
+                    id: "1Wn7NpsVgNqFNh3UoTmFbto3c0jvsiGHD",
+                    name: "異空の風穴",
+                    cost: 2,
+                    rarities: 3,
+                    strength: 2,
+                    effect: "",
+                    tags: [22,28,37],
+                    no: 550,
+                },
+                {
+                    id: "15YjPzyyhJTM3GOYIQd8Zjs23mAFTLMMf",
+                    name: "背伸びの構え",
+                    cost: 0,
+                    rarities: 2,
+                    strength: 1,
+                    effect: "",
+                    tags: [3,11],
+                    no: 552,
+                },
+                {
+                    id: "1bMjElRiiOhXn6DhtsacJF28V-9DC177u",
+                    name: "快刀乱魔",
+                    cost: 1,
+                    rarities: 3,
+                    strength: 1,
+                    effect: "",
+                    tags: [1,31,34],
+                    no: 554,
+                },
+                {
+                    id: "1Diy9nRgKrQcxgRqqOaUQTlAnFoG5OGhb",
+                    name: "緑激強丸",
+                    cost: 3,
+                    rarities: 2,
+                    strength: 4,
+                    effect: "",
+                    tags: [9,14,15,17,26,35,36],
+                    no: 556,
+                },
+                {
+                    id: "1FHjaGZpnIL3cboiX1AUsX1SpNOlDlHK4",
+                    name: "遥か青き星よ",
+                    cost: 3,
+                    rarities: 3,
+                    strength: 2,
+                    effect: "",
+                    tags: [13,16,34],
+                    no: 558,
+                },
+                {
+                    id: "1L8hrkdHvfT1eewPt0cnd47RbrsnfmWr-",
+                    name: "傷裂き",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 5,
+                    effect: "",
+                    tags: [19,35],
+                    no: 560,
+                },
+                {
+                    id: "1w0AEkb6VRypEa4taBr26AAIvoVJ-LbAH",
+                    name: "乱狙鏡",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 3,
+                    effect: "",
+                    tags: [2,19,34],
+                    no: 562,
+                },
+                {
+                    id: "1-fT20NSw0TDzCxSP89Wi9Hf4KpFLVLID",
+                    name: "ティギリ",
+                    cost: 1,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [10,27],
+                    no: 564,
+                },
+                {
+                    id: "1XW5JaRUl1sYnt9RKX-UWWhVLJeawPy7D",
+                    name: "荒水均し",
+                    cost: 2,
+                    rarities: 3,
+                    strength: 4,
+                    effect: "",
+                    tags: [16,19,34],
+                    no: 566,
+                },
+                {
+                    id: "1SMh5cGI4GwqKKgsOIrWGuVSxf1L3GwYy",
+                    name: "冬のプレゼント！",
+                    cost: 3,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [],
+                    no: 568,
+                },
+                {
+                    id: "1DwPmJwxtkkMNTVMUrWFex_O0JmmS9xQh",
+                    name: "餅つき",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 1,
+                    effect: "",
+                    tags: [2,26,28,35],
+                    no: 570,
+                },
+                {
+                    id: "18wVWARICfvA5nCuqxARSObk7nfK1DUSC",
+                    name: "下級熊猫",
+                    cost: 1,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [2,19,26],
+                    no: 572,
+                },
+                {
+                    id: "1kf_Lc6udlMcGXnqINKiuRU-5_ByTGzO2",
+                    name: "ジナ・ドゥーム",
+                    cost: 2,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [6,16,19,37],
+                    no: 574,
+                },
+                {
+                    id: "1V1iZxCSaliQOcFaQ_MSCn4oLNq96yqQD",
+                    name: "血色薔薇の渇望",
+                    cost: 2,
+                    rarities: 3,
+                    strength: 3,
+                    effect: "",
+                    tags: [16,19,34,37],
+                    no: 576,
+                },
+                {
+                    id: "19jFkXqcZaUcPDo4FFRpziI3gYqZ-2B3e",
+                    name: "友の敵に滅びあれ",
+                    cost: 2,
+                    rarities: 3,
+                    strength: 5,
+                    effect: "",
+                    tags: [9,16,24],
+                    no: 578,
+                },
+                {
+                    id: "1_zhDBctrwip6GxAlKWOcU1Hkp9mhrHSC",
+                    name: "ブラーニャ",
+                    cost: 0,
+                    rarities: 2,
+                    strength: 2,
+                    effect: "",
+                    tags: [11,34,35],
+                    no: 580,
+                },
+                {
+                    id: "1iGmcToC0rkWa-83B8H-7azgD209lkdQn",
+                    name: "集いし星、束ねた願い",
+                    cost: 2,
+                    rarities: 1,
+                    strength: 3,
+                    effect: "",
+                    tags: [3,15,31,34],
+                    no: 582,
+                },
+                {
+                    id: "1NVYmcJxuch7mClckKzaofJ9PL7Pn1Jq2",
+                    name: "剣王流・被柳",
+                    cost: 3,
+                    rarities: 1,
+                    strength: 3,
+                    effect: "",
+                    tags: [15,34],
+                    no: 584,
+                },
+                {
+                    id: "1YABKos_3NZ5RXjoiZJdEH9J7uhB_cJAe",
+                    name: "SHOW TIME",
+                    cost: 2,
+                    rarities: 3,
+                    strength: 1,
+                    effect: "",
+                    tags: [19,37],
+                    no: 586,
+                },
+                {
+                    id: "1vrEQof4ndMXD-BLpZBfs2ru2ZeLQ7F_7",
+                    name: "オラトリオ",
+                    cost: 3,
+                    rarities: 2,
+                    strength: 3,
+                    effect: "",
+                    tags: [15],
+                    no: 588,
+                },
+                {
+                    id: "1Wrv97IIcrhgb49Ltn-CWfUH02lmE0Lbf",
+                    name: "メサイアの予言",
+                    cost: 3,
+                    rarities: 3,
+                    strength: 3,
+                    effect: "",
+                    tags: [1,16,23,24,34],
+                    no: 590,
+                },
+                {
+                    id: "1geHKIsNAxtUy8IhpDe0f4XQjURYRP79q",
+                    name: "転生の書",
+                    cost: 2,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [29],
+                    no: 592,
+                },
+                {
+                    id: "13GGRQwK1JA5n6YNbqNOz8P-jP3elxIoA",
+                    name: "夢見崩し",
+                    cost: 1,
+                    rarities: 3,
+                    strength: 2,
+                    effect: "",
+                    tags: [13,17,34],
+                    no: 594,
+                },
+                {
+                    id: "1EY3CLjiZtLPcBmqzaz2c7Bf83MNDQMux",
+                    name: "一瞬の二・三歩",
+                    cost: 1,
+                    rarities: 2,
+                    strength: 5,
+                    effect: "",
+                    tags: [2,15,34],
+                    no: 596,
+                },
+                {
+                    id: "1uQGozK4AbnZhHIsMp-k5iHlZGQrcAgKI",
+                    name: "剣王流・炎天の権能",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 4,
+                    effect: "",
+                    tags: [2,18],
+                    no: 598,
+                },
+                {
+                    id: "1tOmOk2tXzO9nNkwMyhG5VtJkBANTaWww",
+                    name: "タクシュレム",
+                    cost: 0,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [2],
+                    no: 600,
+                },
+                {
+                    id: "1dYeGBcdwUPsnm-mv-JXkJqmuYsJEfPgf",
+                    name: "念動変換装置",
+                    cost: 1,
+                    rarities: 3,
+                    strength: 1,
+                    effect: "",
+                    tags: [2,6,7],
+                    no: 602,
+                },
+                {
+                    id: "1ielJCtb-hfD-EHrP_5PyLpZmsmtEoL9n",
+                    name: "翠玉の剣",
+                    cost: 1,
+                    rarities: 2,
+                    strength: 2,
+                    effect: "",
+                    tags: [1,26,34],
+                    no: 604,
+                },
+                {
+                    id: "19zYXWUZcrhlsQtBYUAOMGx_nnxBPhwSB",
+                    name: "花贈り・雪溶け",
+                    cost: 2,
+                    rarities: 3,
+                    strength: 1,
+                    effect: "",
+                    tags: [2,14,16,34],
+                    no: 606,
+                },
+                {
+                    id: "1_SZKGnwPDC4zW1_TwR2fmNXQflYYkM_8",
+                    name: "つるぎ坊や",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 5,
+                    effect: "",
+                    tags: [1,22],
+                    no: 608,
+                },
+                {
+                    id: "1oW54QKafbuUlYs-35hz21AWPLULEmQba",
+                    name: "ひとすがりの希望",
+                    cost: 0,
+                    rarities: 1,
+                    strength: 2,
+                    effect: "",
+                    tags: [14,18,20,30],
+                    no: 610,
+                },
+                {
+                    id: "1D3FXWnOeiXezdNqm_bXUKcU1Xn0GXF5j",
+                    name: "偵察休歩",
+                    cost: 1,
+                    rarities: 2,
+                    strength: 1,
+                    effect: "",
+                    tags: [1,2,27,34],
+                    no: 612,
+                },
+                {
+                    id: "1-SC-BZxsvL1Hp87y3K58BcSVAZULbYmb",
+                    name: "ファミロン",
+                    cost: 1,
+                    rarities: 1,
+                    strength: null,
+                    effect: "",
+                    tags: [31],
+                    no: 614,
+                },
+                {
+                    id: "1U0WLCOguzoMgmvqpFYmnEoc1ewrqA70G",
+                    name: "サメの強襲",
+                    cost: 3,
+                    rarities: 3,
+                    strength: 3,
+                    effect: "",
+                    tags: [13,14,17],
+                    no: 616,
+                },
+                {
+                    id: "1Gh5hSmZIF9u9zI04B6xSoQtZt94biOV5",
+                    name: "言論統制・MF",
+                    cost: 3,
+                    rarities: 1,
+                    strength: 1,
+                    effect: "",
+                    tags: [31,34],
+                    no: 618,
+                },
+                {
+                    id: "10YSD8J7denqri9tdK1rXPZEZdQtOPUXD",
+                    name: "支配呪術",
+                    cost: 2,
+                    rarities: 2,
+                    strength: null,
+                    effect: "",
+                    tags: [26,31],
+                    no: 620,
+                },
+                {
+                    id: "1WafNII_3Pm3_PRfQ6F0MokTF9e74qvPk",
+                    name: "冥鯨の剣",
+                    cost: 1,
+                    rarities: 2,
+                    strength: 1,
+                    effect: "",
+                    tags: [11,16,34,36],
+                    no: 622,
+                },
+                {
+                    id: "1JW67pcoR186Mkuh7tywb9wjP8H3nIlJx",
+                    name: "煌く雷撃ケラウノス",
+                    cost: 3,
+                    rarities: 2,
+                    strength: 4,
+                    effect: "",
+                    tags: [17,18,25,34],
+                    no: 624,
+                },
+                {
+                    id: "1h-FijiYdoLnXNKaACmEzv0wDFKGJYKTH",
+                    name: "神守の剣",
+                    cost: 1,
+                    rarities: 2,
+                    strength: 2,
+                    effect: "",
+                    tags: [1,2,26,35],
+                    no: 626,
+                },
+                {
+                    id: "1G3daOtdWw0YDlvyjHnpHnOL5r6SYV0A0",
+                    name: "百鬼夜行",
+                    cost: 3,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [1,6,7,31],
+                    no: 628,
+                },
+                {
+                    id: "12wF0MPDr9VI9MBQDFOmDMHeN6IRQnelo",
+                    name: "神獣・ペーガソス",
+                    cost: 2,
+                    rarities: 3,
+                    strength: 4,
+                    effect: "",
+                    tags: [16,27,34],
+                    no: 630,
+                },
+                {
+                    id: "1_a5AJkU2CF1IoQCt7Y0GpvYI57RlVkT3",
+                    name: "焔",
+                    cost: 2,
+                    rarities: 2,
+                    strength: 4,
+                    effect: "",
+                    tags: [31,35],
+                    no: 632,
+                },
+                {
+                    id: "1FWFwIj2dbMUJ38-43Syuf3i57zaLgIJQ",
+                    name: "絶望の姫君の構え",
+                    cost: 0,
+                    rarities: 2,
+                    strength: 1,
+                    effect: "",
+                    tags: [3,31,34],
+                    no: 634,
+                },
+                {
+                    id: "1V4IWDHBtUnZxMQ_c22iu9bz99gEdlyOw",
+                    name: "ロールプレイ",
+                    cost: 0,
+                    rarities: 2,
+                    strength: 2,
+                    effect: "",
+                    tags: [25,34],
+                    no: 636,
+                },
+                {
+                    id: "1vuK_EjkmeN7NYzFqoy49AtTUN5GyPNvZ",
+                    name: "シュクルツ・バリア",
+                    cost: 0,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [1],
+                    no: 638,
+                },
+                {
+                    id: "11IuAzsgWLDQtGOiHR2y6ENKnPRwk5dL0",
+                    name: "増殖する技",
+                    cost: 1,
+                    rarities: 3,
+                    strength: 1,
+                    effect: "",
+                    tags: [23,31,35,36],
+                    no: 640,
+                },
+                {
+                    id: "11AirnojCyA3DuiDaURGwnGgf4SNl5nZ6",
+                    name: "ナイフファン",
+                    cost: 2,
+                    rarities: 3,
+                    strength: 2,
+                    effect: "",
+                    tags: [10,26,36],
+                    no: 642,
+                },
+                {
+                    id: "1e2f9jBczzwxanx_FuEKKoDMKVTMfmGpm",
+                    name: "陰陽の剣",
+                    cost: 1,
+                    rarities: 2,
+                    strength: 2,
+                    effect: "",
+                    tags: [2,15,16,34],
+                    no: 644,
+                },
+                {
+                    id: "1pGqoIk2axr_REyzBT0s8sp9orJ3oYUQ-",
+                    name: "黎明のアリア",
+                    cost: 3,
+                    rarities: 1,
+                    strength: null,
+                    effect: "",
+                    tags: [16,23],
+                    no: 646,
+                },
+                {
+                    id: "1zo8tpYCnvu3ZyBVulMZgvGRMteqd2_Il",
+                    name: "束状の剣",
+                    cost: 1,
+                    rarities: 2,
+                    strength: 1,
+                    effect: "",
+                    tags: [1,2,26],
+                    no: 648,
+                },
+                {
+                    id: "1buXRNSqrvoRPaYhBekQxX1KorBEmc4Mh",
+                    name: "氷華繚乱",
+                    cost: 0,
+                    rarities: 2,
+                    strength: 5,
+                    effect: "",
+                    tags: [1,5,16,34,36],
+                    no: 650,
+                },
+                {
+                    id: "16XRaWhtGQeFE72QXpIxJj1cMtTqxr6z1",
+                    name: "アセレラシオン",
+                    cost: 3,
+                    rarities: 3,
+                    strength: 2,
+                    effect: "",
+                    tags: [22,23],
+                    no: 652,
+                },
+                {
+                    id: "1mn1kIykuq4qjnxq5Uk9B_2HZf8QO7ePC",
+                    name: "狂乱の剣",
+                    cost: 0,
+                    rarities: 3,
+                    strength: 1,
+                    effect: "",
+                    tags: [10,16,26],
+                    no: 654,
+                },
+                {
+                    id: "1VT7zVM7j9Z6q41l6OHOC-jg-GTBYiKtS",
+                    name: "自由律カード",
+                    cost: 4,
+                    rarities: 4,
+                    strength: 0,
+                    effect: "",
+                    tags: [],
+                    no: 656,
+                },
+                {
+                    id: "1xVR61u1OA1u0O4VS3aLvM1p9vPsTrl49",
+                    name: "緋色の宝石弾",
+                    cost: 0,
+                    rarities: 2,
+                    strength: 1,
+                    effect: "",
+                    tags: [16,34],
+                    no: 658,
+                },
+                {
+                    id: "1B-vtJRvqektM6XU-C9acdkp2ww_p64Wf",
+                    name: "迷彩純地・謀鹿",
+                    cost: 2,
+                    rarities: 2,
+                    strength: 2,
+                    effect: "",
+                    tags: [9,23,29],
+                    no: 660,
+                },
+                {
+                    id: "1N5m1FeVoNdXKDNcJNwck65PdMR1yYcBc",
+                    name: "柳刃",
+                    cost: 3,
+                    rarities: 3,
+                    strength: 3,
+                    effect: "",
+                    tags: [1,2],
+                    no: 662,
+                },
+                {
+                    id: "1zqoKncBk0Ypk_It8qfsO0aiYezSPGJJ9",
+                    name: "瞬間を永遠に",
+                    cost: 0,
+                    rarities: 3,
+                    strength: null,
+                    effect: "",
+                    tags: [17,31],
+                    no: 664,
+                },
+                {
+                    id: "11vl2bYbs04ix8VcR_BuhUzD7v86cNroY",
+                    name: "マルチ・ヴィジョン",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 1,
+                    effect: "",
+                    tags: [2],
+                    no: 666,
+                },
+                {
+                    id: "1_SfpMlN5Z3o5wVVeE7N4JSx5eDyHHwku",
+                    name: "虚攻城塞 - アルセネト",
+                    cost: 2,
+                    rarities: 3,
+                    strength: 1,
+                    effect: "",
+                    tags: [14,16,30,34,37],
+                    no: 668,
+                },
+                {
+                    id: "19BgvpchszHDvBqRjy_qS0oBOREH2t8-w",
+                    name: "審判の時は未だ来ず",
+                    cost: 0,
+                    rarities: 2,
+                    strength: 5,
+                    effect: "",
+                    tags: [1,19,22],
+                    no: 670,
+                },
+                {
+                    id: "1uMVyARQUT-XmzoJ3GYp6K52AHBQDpG7h",
+                    name: "狂気のギジン化",
+                    cost: 1,
+                    rarities: 1,
+                    strength: 2,
+                    effect: "",
+                    tags: [8,11,14,31,34],
+                    no: 672,
+                },
+                {
+                    id: "1W6LjO6RR1qIPES2JjbC6rL3ykQZrgye7",
+                    name: "星見の断ち",
+                    cost: 2,
+                    rarities: 3,
+                    strength: 2,
+                    effect: "",
+                    tags: [2,16,29,34],
+                    no: 674,
+                },
+                {
+                    id: "1Pk7J079LRqxsguN2P9q_OSaLxbT11Liy",
+                    name: "迷彩純地・狩猪",
+                    cost: 2,
+                    rarities: 1,
+                    strength: 2,
+                    effect: "",
+                    tags: [9,16],
+                    no: 676,
+                },
+            ],
+          };
+        },
+        created() {
+          if (this.is_mobile) {
+            this.options.deck_card_size = 40;
+            this.options.card_size = 45;
+          }
+          if (localStorage.deck_list) {
+            this.decks = JSON.parse(localStorage.deck_list);
+          }
+          if (!this.decks.length) {
+            this.decks = [
+              {
+                name: "新規デッキ",
+                cards: [],
+              },
+            ];
+          }
+          this.select_deck.index = 0;
+          this.select_deck.name = this.decks[0].name;
+
+          // const channel = new BroadcastChannel("app-data");
+          // channel.addEventListener("message", (event) => {
+          //   console.log(event.data);
+          // });
+
+          // channel.postMessage({ test: 123 });
+        },
+        mounted() {
+          const position = { x: 0, y: 0 };
+
+          //   ドラッグイベント
+          interact(".draggable").draggable({
+            listeners: {
+              start: (event) => {
+                event.target.style.zIndex = 20;
+                this.is_darg = true;
+              },
+              move: (event) => {
+                position.x += event.dx;
+                position.y += event.dy;
+
+                event.target.style.transform = `translate(${position.x}px, ${position.y}px)`;
+              },
+              end: (event) => {
+                event.target.style.transform = "";
+                event.target.style.zIndex = 0;
+                position.x = 0;
+                position.y = 0;
+              },
+            },
+          });
+
+          //   ドロップイベント
+          interact(".dropzone").dropzone({
+            // only accept elements matching this CSS selector
+            // accept: "#yes-drop",
+            // Require a 75% element overlap for a drop to be possible
+            overlap: 0.1,
+
+            // listen for drop related events:
+
+            ondropactivate: function (event) {
+              // add active dropzone feedback
+              event.target.classList.add("drop-active");
+            },
+            ondragenter: function (event) {
+              var draggableElement = event.relatedTarget;
+              var dropzoneElement = event.target;
+
+              // feedback the possibility of a drop
+              dropzoneElement.classList.add("drop-target");
+              draggableElement.classList.add("can-drop");
+              // draggableElement.textContent = "Dragged in";
+            },
+            ondragleave: function (event) {
+              // remove the drop feedback style
+              event.target.classList.remove("drop-target");
+              event.relatedTarget.classList.remove("can-drop");
+              // event.relatedTarget.textContent = "Dragged out";
+            },
+            ondrop: (event) => {
+              // event.relatedTarget.textContent = "Dropped";
+              this.add_card(event.relatedTarget.dataset.id);
+            },
+            ondropdeactivate: function (event) {
+              // remove active dropzone feedback
+              event.target.classList.remove("drop-active");
+              event.target.classList.remove("drop-target");
+            },
+          });
+        },
+        computed: {
+          CARD_TYPE() {
+            return {
+              ART: "1",
+              SPELL: "2",
+            };
+          },
+          // デッキカードの情報取得
+          deck_cards() {
+            if (!this.decks) return [];
+
+            cards = [];
+
+            for (const card of this.decks[this.select_deck.index].cards) {
+              const card_index = this.cards.findIndex((e) => e.id == card.id);
+              cards.push({
+                ...this.cards[card_index],
+                ...{ index: card_index },
+              });
+            }
+            return cards
+              .sort((a, b) => a.index - b.index)
+              .sort(
+                (a, b) =>
+                  a[this.deck_card_sort.value] - b[this.deck_card_sort.value]
+              );
+          },
+          // 重複削除したデッキカードの情報取得
+          deduplication_deck_cards() {
+            return this.deck_cards.filter((element, index) => {
+              return (
+                this.deck_cards.findIndex((e) => e.id == element.id) === index
+              );
+            });
+          },
+          sort_cards() {
+            return this.cards.sort(
+              (a, b) => a[this.card_sort.value] - b[this.card_sort.value]
+            );
+          },
+          // デッキセレクトボックス項目
+          select_decks() {
+            const items = [];
+            for (const key in this.decks) {
+              items.push({
+                index: key,
+                name: this.decks[key].name,
+              });
+            }
+            return items;
+          },
+          is_filter() {
+            for (const key of Object.keys(this.filters)) {
+              if (this.filters[key].length) return true;
+            }
+            return false;
+          },
+          // スマホか
+          is_mobile() {
+            const userAgent = window.navigator.userAgent.toLowerCase();
+            if (
+              userAgent.indexOf("iphone") != -1 ||
+              userAgent.indexOf("ipad") != -1 ||
+              userAgent.indexOf("android") != -1 ||
+              userAgent.indexOf("mobile") != -1
+            ) {
+              return true;
+            } else {
+              return false;
+            }
+          },
+        },
+        methods: {
+          dd(data) {
+            console.log(data);
+          },
+          // デッキにカード追加
+          add_card(card_id) {
+            if (
+              this.decks[this.select_deck.index].cards.filter(
+                (e) => e.id === card_id
+              ).length >= 2
+            )
+              return;
+
+            this.decks[this.select_deck.index].cards.push({ id: card_id });
+            this.update_deck_code();
+          },
+          // デッキからカードを取り除く
+          remove_card(card_id) {
+            const deck_index = this.decks[
+              this.select_deck.index
+            ].cards.findIndex((e) => e.id == card_id);
+            this.decks[this.select_deck.index].cards.splice(deck_index, 1);
+            this.update_deck_code();
+          },
+          // デッキの名前更新
+          update_deck_name() {
+            this.select_deck.name = this.decks[this.select_deck.index].name;
+          },
+          // デッキ追加
+          add_deck() {
+            this.decks.push({ name: "新規デッキ", cards: [] });
+            this.select_deck.name = "新規デッキ";
+            this.select_deck.index = this.decks.length - 1;
+            this.update_deck_code();
+          },
+          // フィルターで表示ならtrue 非表示ならfalse
+          filter(card) {
+            if (!this.is_filter) return true;
+            // コスト
+            if (this.filters.costs.length) {
+              if (!this.filters.costs.includes(card.cost.toString()))
+                return false;
+            }
+             // レアリティ
+            if (this.filters.rarities.length) {
+              if (!this.filters.rarities.includes(card.rarities.toString()))
+                return false;
+            }
+            // 強度
+            if (this.filters.strengths.length) {
+              if (card.strength === null) return false;
+              if (!this.filters.strengths.includes(card.strength.toString()))
+                return false;
+            }
+            // 技・呪文
+            if (this.filters.type) {
+              if (
+                this.filters.type === this.CARD_TYPE.ART &&
+                card.strength === null
+              ) {
+                return false;
+              }
+              if (
+                this.filters.type === this.CARD_TYPE.SPELL &&
+                card.strength !== null
+              ) {
+                return false;
+              }
+            }
+              // タグ
+              if (this.filters.tags.length) {
+
+                  if (this.filters.tagMode === "or") {
+
+                      if (!this.filters.tags.some(tag => card.tags.includes(tag))) {
+                          return false;
+                      }
+
+                  } else {
+
+                      if (!this.filters.tags.every(tag => card.tags.includes(tag))) {
+                          return false;
+                      }
+
+                  }
+
+              }
+            // 検索
+            if (this.filters.word) {
+              if (
+                card.name.indexOf(this.filters.word) === -1 &&
+                card.effect.indexOf(this.filters.word) === -1
+              ) {
+                return false;
+              }
+            }
+
+            return true;
+          },
+          open_card_detail(id) {
+            if (this.is_darg) {
+              this.is_darg = false;
+              return;
+            }
+            this.detail_card_id = id;
+            this.show_dialog_detail = true;
+          },
+          // デッキ情報をローカルストレージに保存
+          save() {
+            localStorage.deck_list = JSON.stringify(this.decks);
+          },
+          // デッキ削除
+          delete_deck() {
+            this.decks.splice(this.select_deck.index, 1);
+            if (this.decks.length == 0) {
+              this.add_deck();
+            } else {
+              this.select_deck.index = 0;
+              this.select_deck.name = this.decks[0].name;
+            }
+          },
+          // カードが何枚採用されてるか
+          num_deck_card(card_id) {
+            return this.deck_cards.filter((card) => card.id === card_id).length;
+          },
+          // カードがドラッグ出来るか
+          is_darg_card(card_id) {
+            return (
+              this.num_deck_card(card_id) < 2 && this.deck_cards.length < 20
+            );
+          },
+          // デッキコード更新
+          update_deck_code() {
+            this.error_message.deck = "";
+            if (this.deck_cards.length !== 20) {
+              this.deck_code = "";
+              return;
+            }
+
+            const card_nos = [];
+            const deck_cards = this.deck_cards.sort((a, b) => a.no - b.no);
+            for (const card of deck_cards) {
+              if (card_nos.includes(card.no)) {
+                card_nos.push(card.no + 1);
+              } else {
+                card_nos.push(card.no);
+              }
+            }
+            if (new Set(card_nos).size !== card_nos.length) {
+              this.error_message.deck = "デッキコードエラー、カードの重複";
+              return;
+            }
+            card_nos.push(this.is_copy ? 0 : 1);
+            this.deck_code = card_nos.join("a");
+          },
+          // シミュレーションデッキをシャッフル
+          shuffle_card() {
+            this.num_simulation_card = 4;
+            const cards = [...this.deck_cards];
+            const random_cards = [];
+            while (cards.length > 0) {
+              random_cards.push(
+                cards.splice(Math.floor(Math.random() * cards.length), 1)[0]
+              );
+            }
+            this.random_simulation_cards = random_cards;
+          },
+          // シミュレーションダイアログをオープン
+          open_dialog_simulation() {
+           if (this.deck_cards.length > 3) {
+           this.shuffle_card();
+           this.show_dialog_simulation = true;
+}
+
+          },
+          // デッキコードをクリップボードにコピー
+          copy_deck_code() {
+            if (!this.deck_code) return;
+            navigator.clipboard.writeText(this.deck_code);
+            this.show_snackbar_copy = true;
+          },
+          // 入力されたデッキコードからデッキを復元
+          decode_deck_code(is_new_deck) {
+            this.error_message.deck_code = "";
+            if (!this.input_deck_code) return;
+            const nos = this.input_deck_code.split("a").map((e) => Number(e));
+            if (nos.length !== 21) {
+              this.error_message.deck_code = "読み取りエラー";
+              return;
+            }
+            nos.pop();
+            if (new Set(nos).size !== nos.length) {
+              this.error_message.deck_code = "読み取りエラー、カードの重複";
+              return;
+            }
+            const ids = [];
+            for (let no of nos) {
+              if (no % 2 === 1) {
+                no--;
+              }
+              const card_index = this.cards.findIndex((e) => e.no == no);
+              if (card_index === -1) {
+                // this.error_message.deck_code =
+                //   "読み取りエラー、対象カードが見つかりません";
+                continue;
+              }
+              ids.push({ id: this.cards[card_index].id });
+            }
+            if (is_new_deck) {
+              this.decks.push({ name: "新規デッキ", cards: ids });
+              this.select_deck.name = "新規デッキ";
+              this.select_deck.index = this.decks.length - 1;
+            } else {
+              this.decks[this.select_deck.index].cards = ids;
+            }
+            this.deck_code = this.input_deck_code;
+            this.input_deck_code = "";
+            this.show_input_deck_code = false;
+          },
+          // デッキコピー
+          copy_deck() {
+            this.decks.push({
+              name: "新規デッキ",
+              cards: [...this.decks[this.select_deck.index].cards],
+            });
+            this.select_deck.name = "新規デッキ";
+            this.select_deck.index = this.decks.length - 1;
+          },
+          // 全てのデッキ情報をエクスポート
+      //    export_decks() {
+      //      this.input_import_export = JSON.stringify(this.decks);
+     //     },
+          // デッキ情報をインポート
+      //    import_decks(is_add_deck) {
+      //      this.error_message.import_export = "";
+      //      try {
+      //        if (is_add_deck) {
+      //          this.decks = [
+      //            ...this.decks,
+      //            ...JSON.parse(this.input_import_export),
+      //          ];
+      //        } else {
+     //           this.decks = JSON.parse(this.input_import_export);
+      //        }
+      //        this.select_deck.index = 0;
+      //        this.select_deck.name = this.decks[0].name;
+      //
+      //        this.show_import_export = false;
+      //        this.input_import_export = "";
+      //      } catch (error) {
+      //        this.error_message.import_export = "読み込みエラー";
+      //      }
+      //    },
+        },
+      })
+        .use(vuetify)
+        .mount("#app");
+    </script>
+    <style>
+      .card {
+        display: inline-block;
+        width: 150px;
+        padding: 2em 0.5em;
+        /* margin: 1rem 0 0 1rem; */
+
+        color: #fff;
+        background-color: #29e;
+        border: solid 2px #fff;
+
+        touch-action: none;
+        user-select: none;
+        transform: translate(0px, 0px);
+
+        transition: background-color 0.3s;
+      }
+
+      .draggable {
+        touch-action: none;
+        user-select: none;
+        position: relative;
+      }
+
+      .card-img {
+        /* z-index: 999; */
+        position: relative;
+      }
+
+      .card-detail {
+        height: 80vh;
+      }
+
+      .bg-bark {
+        opacity: 0.6;
+      }
+
+      .deck-img {
+        width: 120px;
+
+        /* position: relative; */
+      }
+
+      .icon-close {
+        position: absolute;
+        top: -0px;
+        left: 0;
+        /* display: flex; */
+      }
+
+      .icon-numeric-2 {
+        position: absolute;
+        top: 20px;
+        left: 40%;
+      }
+
+      #outer-dropzone {
+        height: 140px;
+      }
+      .dropzone {
+        /* background-color: #bfe4ff; */
+
+        /* width: 100%; */
+        min-height: 200px;
+        transition: background-color 0.3s;
+
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+
+      .drop-active {
+        border-color: #aaa;
+      }
+
+      .drop-target {
+        background-color: #29e;
+        border-color: #fff;
+        border-style: solid;
+      }
+
+      .drag-drop.can-drop {
+        color: #000;
+        background-color: #4e4;
+      }
+    </style>
+  </body>
+</html>
